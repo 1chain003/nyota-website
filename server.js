@@ -1,4 +1,4 @@
-require('node:process').loadEnvFile('.env');
+try { require('node:process').loadEnvFile('.env'); } catch (e) { if (e.code !== 'ENOENT') throw e; }
 const Busboy = require('busboy');
 const http = require('http');
 const fs = require('fs');
