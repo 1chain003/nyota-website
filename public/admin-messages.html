@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Messages Inbox</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .inbox-container {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+
+    .message-card {
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      background: #fff;
+    }
+
+    .message-card h3 {
+      margin: 0 0 10px;
+    }
+
+    .message-meta {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 15px;
+    }
+
+    .message-body {
+      white-space: pre-wrap;
+      line-height: 1.6;
+    }
+
+    .error {
+      color: #b00020;
+      padding: 15px;
+    }
+
+    .empty {
+      padding: 20px;
+      text-align: center;
+      color: #666;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="inbox-container">
+    <h1>Messages Inbox</h1>
+
+    <p>
+      <a href="/">← Back to homepage</a>
+    </p>
+
+    <div id="messages">
+      Loading messages...
+    </div>
+  </div>
+
+<script>
+async function loadMessages() {
+  const container = document.getElementById("messages");
+
+  try {
+    const response = await fetch("/api/admin/messages", {
+      credentials: "same-origin"
+    });
+
+    const data = await response.json();
+
+    if (response.status === 403 || response.status === 401) {
+      container.innerHTML =
+        '<div class="error">Access denied. Please log in with the administrator account.</div>';
+      return;
+    }
+
+    if (!response.ok || !data.success) {
+      container.innerHTML =
+        '<div class="error">Could not load messages.</div>';
+      return;
+    }
+
+    if (!data.messages || data.messages.length === 0) {
+      container.innerHTML =
+        '<div class="empty">No messages yet.</div>';
+      return;
+    }
+
+    container.innerHTML = data.messages.map(message => `
+      <div class="message-card">
+        <h3>${escapeHtml(message.subject)}</h3>
+
+        <div class="message-meta">
+          <strong>From:</strong> ${escapeHtml(message.name)}
+          &nbsp; | &nbsp;
+          <strong>Email:</strong> ${escapeHtml(message.email)}
+          <br>
+          <strong>Date:</strong> ${new Date(message.createdAt).toLocaleString()}
+        </div>
+
+        <div class="message-body">
+          ${escapeHtml(message.message)}
+        </div>
+      </div>
+    `).join("");
+
+  } catch (error) {
+    container.innerHTML =
+      '<div class="error">Could not connect to the server.</div>';
+  }
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+loadMessages();
+</script>
+
+</body>
+</html>

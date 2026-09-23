@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NYOTA Admin Dashboard</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#f4f7f5;color:#173b2b}
+.admin-header{background:#087f4e;color:white;padding:18px}
+.admin-header-inner{max-width:1200px;margin:auto;display:flex;justify-content:space-between;align-items:center}
+.admin-header h1{margin:0;font-size:22px}
+.logout{background:white;color:#087f4e;border:0;border-radius:6px;padding:10px 15px;font-weight:bold}
+.container{max-width:1200px;margin:25px auto;padding:0 15px}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:15px;margin-bottom:20px}
+.stat{background:white;padding:20px;border-radius:10px}
+.stat strong{display:block;font-size:28px;margin-top:8px}
+.tabs{display:flex;gap:8px;margin-bottom:15px}
+.tab{border:0;background:#ddd;padding:12px 18px;border-radius:6px;font-weight:bold}
+.tab.active{background:#087f4e;color:white}
+.panel{background:white;border-radius:10px;padding:15px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:900px}
+th,td{padding:10px;border-bottom:1px solid #ddd;text-align:left;font-size:13px}
+th{background:#eef5f1}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<header class="admin-header">
+<div class="admin-header-inner">
+<h1>NYOTA Admin Dashboard</h1>
+<button class="logout" id="logoutBtn">Logout</button>
+</div>
+</header>
+<main class="container">
+<section class="stats">
+<div class="stat">Registered Accounts<strong id="userCount">0</strong></div>
+<div class="stat">Job Applications<strong id="applicationCount">0</strong></div>
+</section>
+<div class="tabs">
+<button class="tab active" id="usersTab">Registered Accounts</button>
+<button class="tab" id="applicationsTab">Job Applications</button>
+</div>
+<section class="panel" id="usersPanel">
+<h2>Registered Accounts</h2>
+<div class="table-wrap">
+<table>
+<thead><tr>
+<th>Name</th><th>Email</th><th>Phone</th><th>ID Number</th>
+<th>City</th><th>Postal Code</th><th>Email Verified</th><th>Created</th>
+</tr></thead>
+<tbody id="usersBody"></tbody>
+</table>
+</div>
+</section>
+<section class="panel hidden" id="applicationsPanel">
+<h2>Job Applications</h2>
+<div class="table-wrap">
+<table>
+<thead><tr>
+<th>Name</th><th>Email</th><th>Phone</th><th>ID Number</th>
+<th>Country</th><th>Job</th><th>Experience</th><th>Education</th>
+<th>Message</th><th>Submitted</th><th>CV</th>
+</tr></thead>
+<tbody id="applicationsBody"></tbody>
+</table>
+</div>
+</section>
+</main>
+<script>
+function esc(v){
+return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+async function checkAdmin(){
+try{
+const r=await fetch('/api/admin/me');
+if(!r.ok){location.href='/admin-login.html';return false}
+return true;
+}catch(e){location.href='/admin-login.html';return false}
+}
+async function loadUsers(){
+const r=await fetch('/api/admin/users');
+if(!r.ok)throw new Error('Unable to load registered accounts.');
+const d=await r.json(),u=d.users||[];
+userCount.textContent=u.length;
+usersBody.innerHTML=u.length?u.map(x=>`
+<tr><td>${esc(x.name)}</td><td>${esc(x.email)}</td><td>${esc(x.phone)}</td>
+<td>${esc(x.idNumber)}</td><td>${esc(x.city)}</td><td>${esc(x.postalCode)}</td>
+<td>${x.emailVerified?'Yes':'No'}</td><td>${esc(x.createdAt)}</td></tr>`).join(''):
+'<tr><td colspan="8">No registered accounts found.</td></tr>';
+}
+async function loadApplications(){
+const r=await fetch('/api/admin/applications');
+if(!r.ok)throw new Error('Unable to load job applications.');
+const d=await r.json(),a=d.applications||[];
+applicationCount.textContent=a.length;
+applicationsBody.innerHTML=a.length?a.map(x=>`
+<tr><td>${esc(x.name)}</td><td>${esc(x.email)}</td><td>${esc(x.phone)}</td>
+<td>${esc(x.idNumber)}</td><td>${esc(x.country)}</td><td>${esc(x.job)}</td>
+<td>${esc(x.experience)}</td><td>${esc(x.education)}</td><td>${esc(x.message)}</td>
+<td>${esc(x.submittedAt)}</td><td>${esc(x.cvFilename)}</td></tr>`).join(''):
+'<tr><td colspan="11">No job applications found.</td></tr>';
+}
+usersTab.onclick=()=>{
+usersTab.classList.add('active');applicationsTab.classList.remove('active');
+usersPanel.classList.remove('hidden');applicationsPanel.classList.add('hidden');
+};
+applicationsTab.onclick=()=>{
+applicationsTab.classList.add('active');usersTab.classList.remove('active');
+applicationsPanel.classList.remove('hidden');usersPanel.classList.add('hidden');
+};
+logoutBtn.onclick=async()=>{
+await fetch('/api/admin/logout',{method:'POST'});
+location.href='/admin-login.html';
+};
+(async()=>{
+if(!await checkAdmin())return;
+try{await Promise.all([loadUsers(),loadApplications()])}
+catch(e){alert(e.message)}
+})();
+</script>
+</body>
+</html>

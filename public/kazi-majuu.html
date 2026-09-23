@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kazi Majuu | Youth Opportunities Hub</title>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;color:#173b32;background:#f6f9f7}
+.notice{background:#fff3cd;color:#664d03;text-align:center;padding:10px;font-size:13px}
+header{background:#fff;border-bottom:1px solid #ddd}
+.nav{max-width:1200px;margin:auto;padding:18px 20px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-size:22px;font-weight:bold}
+.logo span{color:#087443}
+nav a{margin-left:18px;text-decoration:none;color:#173b32;font-weight:bold;font-size:14px}
+
+.hero{background:#064f35;color:white;text-align:center;padding:60px 20px}
+.hero h1{font-size:42px;margin:0 0 12px}
+.hero p{font-size:18px}
+
+.container{max-width:1100px;margin:auto;padding:45px 20px}
+.intro{text-align:center;margin-bottom:30px}
+.intro h2{font-size:30px}
+
+.country-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+
+.country{
+background:#fff;
+border-radius:10px;
+padding:22px 15px;
+text-align:center;
+box-shadow:0 2px 10px #0001;
+border:1px solid #e5ebe8
+}
+
+.flag{font-size:40px}
+.country h3{margin:10px 0}
+.country p{font-size:14px;color:#68756f;min-height:35px}
+
+.btn{
+display:inline-block;
+background:#087443;
+color:#fff;
+padding:11px 18px;
+border-radius:6px;
+text-decoration:none;
+font-weight:bold;
+border:0;
+cursor:pointer
+}
+
+.jobs{
+display:none;
+background:white;
+margin-top:40px;
+padding:30px;
+border-radius:10px;
+box-shadow:0 2px 12px #0001
+}
+
+.jobs.active{display:block}
+
+.jobs h2{margin-top:0}
+
+.job-grid{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:18px
+}
+
+.job{
+border:1px solid #e1e8e4;
+border-radius:8px;
+padding:20px;
+background:#fbfcfb
+}
+
+.job h3{margin-top:0}
+.job p{color:#68756f;font-size:14px}
+
+.apply{
+display:inline-block;
+margin-top:8px;
+background:#173b32;
+color:white;
+padding:9px 15px;
+border-radius:5px;
+text-decoration:none;
+font-weight:bold
+}
+
+.warning{
+background:#fff3cd;
+padding:15px;
+border-radius:6px;
+margin-top:25px;
+font-size:14px
+}
+
+footer{background:#102b23;color:white;text-align:center;padding:30px 20px;margin-top:30px}
+
+@media(max-width:850px){
+.country-grid{grid-template-columns:repeat(2,1fr)}
+.job-grid{grid-template-columns:1fr}
+}
+
+@media(max-width:550px){
+.nav{display:block;text-align:center}
+nav{margin-top:15px}
+nav a{display:inline-block;margin:5px}
+.hero h1{font-size:34px}
+.country-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+
+
+
+
+<section class="hero">
+<h1>Kazi Majuu</h1>
+<p>Explore employment opportunities and job categories by country.</p>
+</section>
+
+<div class="container">
+
+<div class="intro">
+<h2>Select a Country</h2>
+<p>Choose a destination to see relevant job categories.</p>
+</div>
+
+<div class="country-grid">
+
+<div class="country">
+<div class="flag">🇦🇪</div>
+<h3>United Arab Emirates</h3>
+<p>Explore UAE opportunities.</p>
+<button class="btn" onclick="showJobs('uae')">View Jobs</button>
+</div>
+
+<div class="country">
+<div class="flag">🇸🇦</div>
+<h3>Saudi Arabia</h3>
+<p>Explore Saudi opportunities.</p>
+<button class="btn" onclick="showJobs('saudi')">View Jobs</button>
+</div>
+
+<div class="country">
+<div class="flag">🇶🇦</div>
+<h3>Qatar</h3>
+<p>Explore Qatar opportunities.</p>
+<button class="btn" onclick="showJobs('qatar')">View Jobs</button>
+</div>
+
+<div class="country">
+<div class="flag">🇬🇧</div>
+<h3>United Kingdom</h3>
+<p>Explore UK opportunities.</p>
+<button class="btn" onclick="showJobs('uk')">View Jobs</button>
+</div>
+
+<div class="country">
+<div class="flag">🇨🇦</div>
+<h3>Canada</h3>
+<p>Explore Canada opportunities.</p>
+<button class="btn" onclick="showJobs('canada')">View Jobs</button>
+</div>
+
+<div class="country">
+<div class="flag">🇩🇪</div>
+<h3>Germany</h3>
+<p>Explore Germany opportunities.</p>
+<button class="btn" onclick="showJobs('germany')">View Jobs</button>
+</div>
+
+<div class="country">
+<div class="flag">🇦🇺</div>
+<h3>Australia</h3>
+<p>Explore Australia opportunities.</p>
+<button class="btn" onclick="showJobs('australia')">View Jobs</button>
+</div>
+
+<div class="country">
+<div class="flag">🇺🇸</div>
+<h3>United States</h3>
+<p>Explore USA opportunities.</p>
+<button class="btn" onclick="showJobs('usa')">View Jobs</button>
+</div>
+
+</div>
+
+<div id="jobs" class="jobs">
+<h2 id="countryTitle"></h2>
+<p id="countryDescription"></p>
+
+<div id="jobGrid" class="job-grid"></div>
+
+<div class="warning">
+<strong>Important:</strong> These are indicative job categories/roles, not a claim that every listed position is currently vacant. Always verify the specific vacancy, employer, recruiter and application requirements before applying or paying any money.
+</div>
+</div>
+
+</div>
+
+<footer>
+
+</footer>
+
+<script>
+
+const jobs = {};
+
+const jobList = [
+["Farm Worker","Agriculture"],
+["Construction Worker","Construction"],
+["House Help","Domestic Services"],
+["Delivery Driver","Transport & Logistics"],
+["Cook","Hospitality & Food Services"],
+["Gym Assistant","Fitness & Recreation"],
+["English Translator","Language Services"],
+["Driver","Transport"],
+["Electrician","Skilled Trades"],
+["Storekeeper","Retail & Warehousing"],
+["Waiter/Waitress","Hospitality"],
+["Watchman","Security Services"],
+["Caregiver","Care & Support"]
+];
+
+["uae","saudi","qatar","uk","canada","germany","australia","usa"].forEach(function(country){
+jobs[country]={
+title: country.toUpperCase()+" — Available Job Categories",
+description:"Explore job categories available through this Kazi Majuu demonstration.",
+roles: jobList
+};
+});
+
+
+function showJobs(country){
+
+const data=jobs[country];
+
+document.getElementById("countryTitle").textContent=data.title;
+
+document.getElementById("countryDescription").textContent=data.description;
+
+const grid=document.getElementById("jobGrid");
+
+grid.innerHTML="";
+
+data.roles.forEach(function(role){
+
+const card=document.createElement("div");
+
+card.className="job";
+
+card.innerHTML=
+"<h3>"+role[0]+"</h3>"+
+"<p><strong>Category:</strong> "+role[1]+"</p>"+
+"<a class='apply' href='#' onclick='return applyJob(\""+role[0]+"\",\""+data.title+"\")'>Apply Now</a>";
+
+grid.appendChild(card);
+
+});
+
+const jobsBox=document.getElementById("jobs");
+
+jobsBox.classList.add("active");
+
+jobsBox.scrollIntoView({behavior:"smooth"});
+
+}
+
+function applyJob(job,country){
+    window.location.href="apply.html?job="+encodeURIComponent(job)+"&country="+encodeURIComponent(country);
+    return false;
+}
+
+</script>
+
+</body>
+</html>

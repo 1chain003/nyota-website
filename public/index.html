@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NYOTA Project</title>
+<link rel="stylesheet" href="/style.css">
+<body><div class="notice nyota-brand">
+  <span class="nyota-mark">✦</span>
+  <span class="nyota-word">NYOTA</span>
+  <span class="nyota-tagline">YOUTH • OPPORTUNITY • TRANSFORMATION</span>
+</div>
+
+<header>
+  <div class="nav">
+    <div class="nav-buttons">
+      <a href="register.html" class="btn primary">Create Account</a>
+      <div class="dropdown">
+  <button type="button" class="btn secondary dropbtn" id="aboutDropdownBtn">Get to Know Us ▾</button>
+  <div class="dropdown-content">
+    <a href="about.html#overview">Project Overview</a>
+    <a href="about.html#management">Management</a>
+    <a href="about.html#agencies">Implementing Agencies</a>
+  </div>
+</div>
+      <a href="member-login.html" class="btn secondary" id="loginBtn">Login</a>
+      <span id="memberGreeting" style="display:none;font-weight:600;margin-right:10px"></span>
+      <button onclick="logoutMember()" class="btn secondary" id="logoutBtn" style="display:none">Logout</button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<section class="hero" id="home"><img src="/images/nyota-map.jpeg" alt="NYOTA Project Kenya map" style="display:block;width:100%;max-width:1000px;height:auto;margin:0 auto;"></section>
+
+<section class="section" id="opportunities">
+  <h2>Opportunities</h2>
+
+  <div class="cards">
+    <div class="card">
+      <h3>Improving Youth Employability</h3>
+      <p>Supporting young people to develop the skills, experience and knowledge needed to access employment opportunities.</p>
+      <a href="employability.html" class="btn secondary" style="background:#007bff;color:#fff;border-color:#007bff;">Read More</a>
+    </div>
+
+    <div class="card">
+      <h3>Improving Youth Entrepreneurship</h3>
+      <p>Supporting young people to develop sustainable businesses and strengthen their entrepreneurial skills.</p>
+      <a href="entrepreneurship.html" class="btn secondary" style="background:#007bff;color:#fff;border-color:#007bff;">Read More</a>
+    </div>
+
+    <div class="card">
+      <h3>Supporting Youth Savings</h3>
+      <p>Promoting a culture of saving and helping young people build stronger financial foundations.</p>
+      <a href="savings.html" class="btn secondary" style="background:#007bff;color:#fff;border-color:#007bff;">Read More</a>
+    </div>
+
+    <div class="card">
+      <h3>Capacity Build Youth to Transact with the Government</h3>
+      <p>Building young people's capacity to access and transact with government services and opportunities.</p><a href="government-transactions.html" class="btn secondary" style="background:#007bff;color:#fff;border-color:#007bff;">Read More</a>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="labour-market">
+  <div class="container">
+    <div class="cards">
+      <div class="card"><div class="icon">🌍</div><h3>Labour Market</h3><p>Explore employment opportunities across different labour markets, including roles in agriculture, construction, domestic work, transport, hospitality, caregiving, security, electrical services, retail and other skilled occupations. Find opportunities that match your skills, experience and career goals.</p><a href="kazi-majuu.html" style="color:#0066cc;">KAZI MAJUU</a></div>
+    </div>
+  </div>
+</section>
+
+<section class="stats">
+  <div class="container">
+    <div class="title">
+      <h2>Our Focus</h2>
+      <p>Supporting young people through practical opportunity pathways.</p>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat">
+        <strong>01</strong>
+        <span>Skills</span>
+      </div>
+
+      <div class="stat">
+        <strong>02</strong>
+        <span>Employment</span>
+      </div>
+
+      <div class="stat">
+        <strong>03</strong>
+        <span>Enterprise</span>
+      </div>
+
+      <div class="stat">
+        <strong>04</strong>
+        <span>Financial Literacy</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="news"><img src="/images/nyota-latest-update.jpg" alt="NYOTA Project official update" style="display:block;width:100%;max-width:1200px;height:auto;margin:0 auto;"></section>
+
+<section class="cta">
+  <div class="container">
+    <h2>Ready to Get Started?</h2>
+    <a href="register.html" class="btn secondary">Register Now</a>
+  </div>
+</section>
+
+
+<section class="message-center" id="message-center" style="display:none;">
+  <div class="container">
+    <h2>Message Center</h2>
+    <p>Have a question? Send us a message and we will get back to you.</p>
+
+    <form id="homepageMessageForm">
+      <label for="homepageName">Your Name</label>
+      <input type="text" id="homepageName" required>
+
+      <label for="homepageEmail">Email Address</label>
+      <input type="email" id="homepageEmail" required>
+
+      <label for="homepageSubject">Subject</label>
+      <input type="text" id="homepageSubject" required>
+
+      <label for="homepageMessage">Message</label>
+      <textarea id="homepageMessage" rows="6" placeholder="Write your message here..." required></textarea>
+
+      <button type="submit" class="btn primary" id="homepageSendButton">
+        Send Message
+      </button>
+
+      <div id="homepageMessageStatus"></div>
+    </form>
+  </div>
+</section>
+
+
+<section class="nyota-photo-gallery" id="nyota-photo-gallery">
+  <div class="container">
+    <div class="gallery-heading">
+      <span>NYOTA PROJECT</span>
+      <h2>Our Impact in Pictures</h2>
+      <p>See the people, activities and opportunities at the heart of the NYOTA Project.</p>
+    </div>
+
+    <div class="nyota-gallery-grid">
+      <img src="images/nyota/nyota-1.jpg" alt="NYOTA Project activity">
+      <img src="images/nyota/nyota-2.jpg" alt="NYOTA Project activity">
+      <img src="images/nyota/nyota-3.jpg" alt="NYOTA Project activity">
+      <img src="images/nyota/nyota-4.jpg" alt="NYOTA Project activity">
+      <img src="images/nyota/nyota-5.jpg" alt="NYOTA Project activity">
+      <img src="images/nyota/nyota-6.jpg" alt="NYOTA Project activity">
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer id="contact">
+  <div class="footer-grid">
+
+    <div>
+      <h3>NYOTA Project</h3>
+      <p>
+        A public website for showcasing youth opportunities and resources.
+      </p>
+    </div>
+
+    <div>
+      <h3>Quick Links</h3>
+      <a href="#home">Home</a>
+    <a href="about.html" class="btn secondary">Get to Know Us</a>
+      <a href="#opportunities">Opportunities</a>
+      <a href="#pathways">Pathways</a>
+      <a href="register.html">Register</a>
+    </div>
+
+    <div>
+      <h3>Account</h3>
+      <a href="member-login.html">Member Login</a>
+      <a href="register.html">Create Account</a>
+    </div>
+
+  </div>
+
+</footer>
+
+<script>
+function updateLoginState() {
+  const loggedIn = localStorage.getItem("memberLoggedIn") === "true";
+  const name = localStorage.getItem("memberName") || "Member";
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+
+  document.getElementById("loginBtn").style.display = loggedIn ? "none" : "inline-block";
+  document.querySelector('a[href="register.html"]').style.display = loggedIn ? "none" : "inline-block";
+  document.getElementById("memberGreeting").textContent = greeting + " " + name;
+  document.getElementById("memberGreeting").style.display = loggedIn ? "inline-block" : "none";
+  document.getElementById("logoutBtn").style.display = loggedIn ? "inline-block" : "none";
+}
+
+function logoutMember() {
+  localStorage.removeItem("memberLoggedIn");
+  localStorage.removeItem("memberEmail");
+  localStorage.removeItem("memberName");
+  window.location.href = "index.html";
+}
+
+
+updateLoginState();
+
+const messageCenter = document.getElementById("message-center");
+
+if (messageCenter) {
+  const loggedIn = localStorage.getItem("memberLoggedIn") === "true";
+  messageCenter.style.display = loggedIn ? "block" : "none";
+}
+
+const homepageMessageForm = document.getElementById("homepageMessageForm");
+const homepageSendButton = document.getElementById("homepageSendButton");
+const homepageMessageStatus = document.getElementById("homepageMessageStatus");
+
+if (homepageMessageForm) {
+  homepageMessageForm.addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    homepageSendButton.disabled = true;
+    homepageSendButton.textContent = "Sending...";
+    homepageMessageStatus.textContent = "";
+
+    try {
+      const response = await fetch("/api/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          name: document.getElementById("homepageName").value.trim(),
+          email: document.getElementById("homepageEmail").value.trim(),
+          subject: document.getElementById("homepageSubject").value.trim(),
+          message: document.getElementById("homepageMessage").value.trim()
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        homepageMessageStatus.textContent =
+          "Your message has been sent successfully.";
+        homepageMessageStatus.className = "success";
+        homepageMessageForm.reset();
+      } else {
+        homepageMessageStatus.textContent =
+          data.message || "Could not send your message.";
+        homepageMessageStatus.className = "error";
+      }
+    } catch (error) {
+      homepageMessageStatus.textContent =
+        "Could not connect to the server.";
+      homepageMessageStatus.className = "error";
+    }
+
+    homepageSendButton.disabled = false;
+    homepageSendButton.textContent = "Send Message";
+  });
+}
+
+</script>
+
+</body>
+</html>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const button = document.getElementById("aboutDropdownBtn");
+  const dropdown = button ? button.closest(".dropdown") : null;
+
+  if (button && dropdown) {
+    button.addEventListener("click", function (event) {
+      event.preventDefault();
+      dropdown.classList.toggle("open");
+    });
+  }
+});
+</script>

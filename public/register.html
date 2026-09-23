@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Nyota Opportunities</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .register-container {
+            max-width: 520px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+
+        .register-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .register-card h1 {
+            margin-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 7px;
+            font-weight: bold;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 7px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        .register-btn {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 7px;
+            background: #b22234;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .register-btn:disabled {
+            opacity: 0.6;
+        }
+
+        #message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .links {
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="register-container">
+    <div class="register-card">
+
+        <h1>Create an Account</h1>
+        <p>Register to access opportunities and manage your application.</p>
+
+        <form id="registrationForm">
+
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="idNumber">Kenyan National ID Number</label>
+                <input
+                    type="text"
+                    id="idNumber"
+                    name="idNumber"
+                    inputmode="numeric"
+                    pattern="[0-9]{7,9}"
+                    maxlength="9"
+                    placeholder="Enter your Kenyan ID number"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="city">City</label>
+                <input
+                    type="text"
+                    id="city"
+                    name="city"
+                    placeholder="Enter your city"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="postalCode">ZIP/Postal Code</label>
+                <input
+                    type="text"
+                    id="postalCode"
+                    name="postalCode"
+                    inputmode="numeric"
+                    placeholder="Enter your postal code"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    minlength="6"
+                    required
+                >
+            </div>
+
+            <button type="submit" class="register-btn" id="registerButton">
+                Create Account
+            </button>
+
+        </form>
+
+        <div id="message"></div>
+
+        <div class="links">
+            <p>Already have an account?
+                <a href="/member-login.html">Login here</a>
+            </p>
+
+            <p>
+                <a href="/">← Back to Home</a>
+            </p>
+        </div>
+
+    </div>
+</div>
+
+<script>
+const form = document.getElementById('registrationForm');
+const button = document.getElementById('registerButton');
+const message = document.getElementById('message');
+
+form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    message.style.display = 'none';
+
+    const password = document.getElementById('password').value;
+
+    let score = 0;
+
+    if (password.length >= 10) score++;
+    if (/[a-z]/.test(password)) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/[0-9]/.test(password)) score++;
+    if (/[^A-Za-z0-9]/.test(password)) score++;
+
+    const strength =
+        password.length === 0 || score <= 2 ? 'Weak' :
+        score <= 4 ? 'Medium' : 'Strong';
+
+    if (strength === 'Weak') {
+        message.style.display = 'block';
+        message.className = 'error';
+        message.textContent =
+            'Password is too weak. Please use at least 10 characters with uppercase, lowercase, a number, and a special character.';
+        return;
+    }
+
+    button.disabled = true;
+    button.textContent = 'Creating Account...';
+
+    const data = {
+        name: document.getElementById('name').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        idNumber: document.getElementById('idNumber').value.trim(),
+        city: document.getElementById('city').value.trim(),
+        postalCode: document.getElementById('postalCode').value.trim(),
+        password: document.getElementById('password').value
+    };
+
+    try {
+        const response = await fetch('/api/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        message.style.display = 'block';
+        message.textContent = result.message;
+
+        if (result.success) {
+            message.className = 'success';
+            if (result.developmentMode && result.verificationLink) {
+                message.innerHTML =
+                    '<strong>Account created successfully!</strong><br><br>' +
+                    '<strong>Local development mode:</strong> Email delivery is not configured yet.<br><br>' +
+                    'Use this link to verify your account:<br><br>' +
+                    '<a href="' + result.verificationLink + '" target="_blank" rel="noopener"><strong>Verify My Email</strong></a><br><br>' +
+                    'The verification link expires after 24 hours.<br><br>' +
+                    '<a href="/member-login.html">Go to Login</a>';
+            } else {
+                message.innerHTML =
+                    '<strong>Account created successfully!</strong><br><br>' +
+                    'We have sent a verification link to your email address.<br>' +
+                    'Please check your inbox and click <strong>Verify My Email</strong> to activate your account.<br><br>' +
+                    'The verification link expires after 24 hours.<br><br>' +
+                    '<a href="/member-login.html">Go to Login</a>';
+            }
+
+            form.reset();
+
+            button.disabled = true;
+            button.textContent = result.developmentMode ? 'Account Created' : 'Verification Email Sent';
+
+        } else {
+            message.className = 'error';
+            button.disabled = false;
+            button.textContent = 'Create Account';
+        }
+
+    } catch (error) {
+        message.style.display = 'block';
+        message.className = 'error';
+        message.textContent = 'Could not connect to the server.';
+
+        button.disabled = false;
+        button.textContent = 'Create Account';
+    }
+});
+</script>
+
+</body>
+</html>

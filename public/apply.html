@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Job Application</title>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:#f4f7f5;
+  color:#173b32;
+}
+header{
+  background:#173b32;
+  color:white;
+  padding:20px;
+  text-align:center;
+}
+.container{
+  max-width:700px;
+  margin:30px auto;
+  background:white;
+  padding:25px;
+  border-radius:10px;
+  box-shadow:0 3px 12px #0002;
+}
+.notice{
+  background:#fff3cd;
+  padding:12px;
+  border-radius:6px;
+  margin-bottom:20px;
+}
+label{
+  display:block;
+  margin-top:15px;
+  font-weight:bold;
+}
+input,textarea{
+  width:100%;
+  box-sizing:border-box;
+  padding:12px;
+  margin-top:6px;
+  border:1px solid #ccc;
+  border-radius:6px;
+  font-size:16px;
+}
+textarea{
+  min-height:100px;
+}
+button{
+  width:100%;
+  padding:14px;
+  margin-top:20px;
+  background:#173b32;
+  color:white;
+  border:0;
+  border-radius:6px;
+  font-size:17px;
+}
+.readonly{
+  background:#eee;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<a href="javascript:history.back()" style="display:inline-block;text-decoration:none;color:#173b32;font-size:18px;font-weight:bold;margin-bottom:15px;">← Back</a>
+
+<h2>Apply for a Job</h2>
+
+<form id="applicationForm" enctype="multipart/form-data">
+
+<label>Job</label>
+<input id="job" class="readonly" readonly>
+
+<label>Country</label>
+<input id="country" class="readonly" readonly>
+
+<label>Full Name *</label>
+<input id="name" required readonly placeholder="Loading your name...">
+
+<label>Email *</label>
+<input id="email" type="email" required readonly placeholder="Loading your email...">
+
+<label>Phone Number *</label>
+<input id="phone" type="tel" required readonly placeholder="Loading your phone number...">
+
+<label>ID Number *</label>
+<input id="idNumber" type="text" inputmode="numeric" required readonly placeholder="Loading your ID number...">
+
+<label>CV *</label>
+<input id="cv" type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required>
+<small>Accepted formats: PDF, DOC, DOCX. Maximum size: 5 MB.</small>
+
+<label>Work Experience</label>
+<textarea id="experience"></textarea>
+
+<label>Education / Qualifications</label>
+<textarea id="education"></textarea>
+
+<label>Additional Message</label>
+<textarea id="message"></textarea>
+
+<button type="submit">Submit Application</button>
+
+</form>
+
+<p id="result"></p>
+
+</div>
+
+<script>
+async function loadMemberProfile() {
+    try {
+        const response = await fetch("/api/me");
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            window.location.href = "/member-login.html";
+            return;
+        }
+
+        document.getElementById("name").value = data.user.name || "";
+        document.getElementById("email").value = data.user.email || "";
+        document.getElementById("phone").value = data.user.phone || "";
+        document.getElementById("idNumber").value = data.user.idNumber || "";
+
+        if (!data.user.name || !data.user.email || !data.user.phone || !data.user.idNumber) {
+            alert("Your member profile is missing required information. Please update your account details.");
+        }
+    } catch (error) {
+        console.error("Profile loading error:", error);
+        alert("Unable to load your member profile. Please log in again.");
+        window.location.href = "/member-login.html";
+    }
+}
+
+loadMemberProfile();
+
+
+
+const params=new URLSearchParams(window.location.search);
+
+document.getElementById("job").value=params.get("job")||"";
+document.getElementById("country").value=params.get("country")||"";
+
+document.getElementById("applicationForm").addEventListener("submit",async function(e){
+
+e.preventDefault();
+
+const result=document.getElementById("result");
+
+const formData=new FormData();
+
+formData.append("job",document.getElementById("job").value);
+formData.append("country",document.getElementById("country").value);
+formData.append("experience",document.getElementById("experience").value.trim());
+formData.append("education",document.getElementById("education").value.trim());
+formData.append("message",document.getElementById("message").value.trim());
+
+const cv=document.getElementById("cv").files[0];
+
+if(!cv){
+result.textContent="Please upload your CV.";
+return;
+}
+
+formData.append("cv",cv);
+
+try{
+
+const response=await fetch("/api/applications",{
+method:"POST",
+body:formData
+});
+
+const data=await response.json();
+
+if(data.success){
+
+document.getElementById("applicationForm").style.display="none";
+
+result.innerHTML=
+"<strong>Application submitted successfully!</strong><br><br>"+
+"Application ID: "+data.applicationId+"<br><br><a href=\"/\" style=\"display:inline-block;padding:12px 20px;background:#173b32;color:white;text-decoration:none;border-radius:6px;\">← Back to Home</a>";
+
+}else{
+
+result.textContent=data.message||"Application failed.";
+
+}
+
+}catch(error){
+
+result.textContent="Unable to submit application. Please try again.";
+
+}
+
+});
+
+</script>
+
+</body>
+</html>
