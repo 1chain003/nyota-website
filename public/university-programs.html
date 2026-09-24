@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Choose a Program | NYOTA</title>
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    .program-page {
+      padding: 40px 20px 60px;
+    }
+
+    .program-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .program-header h1 {
+      color: #087f4e;
+      margin-bottom: 8px;
+    }
+
+    .program-header p {
+      color: #666;
+    }
+
+    .program-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 18px;
+    }
+
+    .program-card {
+      background: #fff;
+      border: 1px solid #dce6e1;
+      border-radius: 10px;
+      padding: 22px;
+      box-shadow: 0 4px 14px rgba(0,0,0,.06);
+    }
+
+    .program-card h3 {
+      margin: 0 0 15px;
+      color: #087f4e;
+      font-size: 17px;
+    }
+
+    .program-card button {
+      width: 100%;
+      border: 0;
+      border-radius: 6px;
+      padding: 11px 14px;
+      background: #087f4e;
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .program-card button:hover {
+      background: #066b42;
+    }
+
+    .selection-summary {
+      background: #f5faf7;
+      border-left: 4px solid #087f4e;
+      padding: 15px 18px;
+      margin-bottom: 28px;
+      border-radius: 5px;
+    }
+
+    .selection-summary strong {
+      color: #087f4e;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="notice nyota-brand">
+    <span class="nyota-mark">✦</span>
+    <span class="nyota-word">NYOTA</span>
+    <span class="nyota-tagline">YOUTH • OPPORTUNITY • TRANSFORMATION</span>
+  </div>
+
+  <header>
+    <div class="nav">
+      <div class="nav-buttons">
+        <a href="index.html" class="btn secondary">Home</a>
+        <a href="register.html" class="btn primary">Create Account</a>
+        <a href="member-login.html" class="btn secondary">Login</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="program-page">
+    <div class="container">
+
+      <div class="program-header">
+        <h1>Choose a Program</h1>
+        <p>Select one of the available programs.</p>
+      </div>
+
+      <div class="selection-summary">
+        <div><strong>Country:</strong> <span id="countryName"></span></div>
+        <div><strong>University:</strong> <span id="universityName"></span></div>
+      </div>
+
+      <div class="program-grid" id="programGrid"></div>
+
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <h3>NYOTA Project</h3>
+      <p>A public website for showcasing youth opportunities and resources.</p>
+    </div>
+  </footer>
+
+  <script>
+    const programs = [
+      "Computer Science",
+      "Information Technology",
+      "Software Engineering",
+      "Data Science",
+      "Electrical Engineering",
+      "Mechanical Engineering",
+      "Civil Engineering",
+      "Business Administration",
+      "Accounting and Finance",
+      "Economics",
+      "Law",
+      "Medicine",
+      "Nursing",
+      "Psychology",
+      "Architecture"
+    ];
+
+    const countryNames = {
+      uk: "United Kingdom",
+      australia: "Australia",
+      usa: "United States",
+      germany: "Germany",
+      "new-zealand": "New Zealand",
+      austria: "Austria",
+      belgium: "Belgium"
+    };
+
+    const params = new URLSearchParams(window.location.search);
+
+    const country = params.get("country");
+    const university = params.get("university");
+
+    document.getElementById("countryName").textContent =
+      countryNames[country] || country || "Not selected";
+
+    document.getElementById("universityName").textContent =
+      university || "Not selected";
+
+    const grid = document.getElementById("programGrid");
+
+    programs.forEach(function(program, index) {
+      const card = document.createElement("div");
+      card.className = "program-card";
+
+      card.innerHTML =
+        "<h3>" + (index + 1) + ". " + program + "</h3>" +
+        '<button type="button">Select Program</button>';
+
+      card.querySelector("button").addEventListener("click", function() {
+        window.location.href =
+          "university-application.html?country=" +
+          encodeURIComponent(country) +
+          "&university=" +
+          encodeURIComponent(university) +
+          "&program=" +
+          encodeURIComponent(program);
+      });
+
+      grid.appendChild(card);
+    });
+  </script>
+
+</body>
+</html>

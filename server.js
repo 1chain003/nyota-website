@@ -493,12 +493,105 @@ if (req.method === 'POST' && req.url === '/api/register') {
                 name: sessionUser.name || '',
                 email: sessionUser.email || '',
                 phone: sessionUser.phone || '',
-                idNumber: sessionUser.idNumber || ''
+                idNumber: sessionUser.idNumber || '',
+                city: sessionUser.city || '',
+                postalCode: sessionUser.postalCode || ''
             }
         });
     }
 
     // JOB APPLICATIONS
+    if (req.method === 'POST' && req.url === '/api/university-applications') {
+        let body = '';
+
+        req.on('data', chunk => {
+            body += chunk;
+
+            if (body.length > 1000000) {
+                req.destroy();
+            }
+        });
+
+        req.on('end', () => {
+            try {
+                const data = JSON.parse(body || '{}');
+
+                const {
+                    country,
+                    university,
+                    program,
+                    fullName,
+                    email,
+                    phone,
+                    education,
+                    statement
+                } = data;
+
+                if (!country || !university || !program ||
+                    !fullName || !email || !phone ||
+                    !education || !statement) {
+                    return sendJson(res, 400, {
+                        success: false,
+                        message: 'Please complete all required fields.'
+                    });
+                }
+
+                const applicationsFile = path.join(dataPath, 'applications.json');
+
+                if (!fs.existsSync(applicationsFile)) {
+                    fs.writeFileSync(applicationsFile, '[]');
+                }
+
+                let applications = [];
+
+                try {
+                    applications = JSON.parse(
+                        fs.readFileSync(applicationsFile, 'utf8') || '[]'
+                    );
+                } catch {
+                    applications = [];
+                }
+
+                const application = {
+                    id: crypto.randomUUID(),
+                    type: 'university-scholarship',
+                    country,
+                    university,
+                    program,
+                    name: fullName,
+                    email,
+                    phone,
+                    education,
+                    message: statement,
+                    submittedAt: new Date().toISOString()
+                };
+
+                applications.push(application);
+
+                fs.writeFileSync(
+                    applicationsFile,
+                    JSON.stringify(applications, null, 2)
+                );
+
+                return sendJson(res, 201, {
+                    success: true,
+                    message: 'University application submitted successfully.',
+                    applicationId: application.id
+                });
+
+            } catch (error) {
+                console.error('University application error:', error);
+
+                return sendJson(res, 500, {
+                    success: false,
+                    message: 'Unable to submit university application.'
+                });
+            }
+        });
+
+        return;
+    }
+
     if (req.method === 'POST' && req.url === '/api/applications') {
         const adminSession = getAdminSession(req);
 
@@ -696,6 +789,14 @@ if (req.method === 'POST' && req.url === '/api/register') {
 
     // PROTECT KAZI MAJUU
     if (req.method === "GET" && req.url.split("?")[0] === "/kazi-majuu.html") {
+        if (!isLoggedIn(req)) {
+            res.writeHead(302, { Location: "/member-login.html" });
+            res.end();
+            return;
+        }
+    }
+
+    if (req.method === "GET" && ["/university-scholarships.html","/university-country.html","/university-programs.html","/university-application.html"].includes(req.url.split("?")[0])) {
         if (!isLoggedIn(req)) {
             res.writeHead(302, { Location: "/member-login.html" });
             res.end();

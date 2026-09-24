@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>University Scholarship Application | NYOTA</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.application-page{padding:40px 20px 60px}
+.application-header{text-align:center;margin-bottom:25px}
+.application-header h1{color:#087f4e}
+.summary{max-width:760px;margin:0 auto 25px;background:#f5faf7;border-left:4px solid #087f4e;padding:15px}
+.form{max-width:760px;margin:auto;background:#fff;border:1px solid #dce6e1;border-radius:10px;padding:25px}
+.group{margin-bottom:17px}
+.group label{display:block;font-weight:700;margin-bottom:6px}
+.group input,.group textarea{width:100%;box-sizing:border-box;padding:12px;border:1px solid #ccd8d3;border-radius:6px;font:inherit}
+.group textarea{min-height:140px}
+.submit{width:100%;padding:13px;border:0;border-radius:6px;background:#087f4e;color:white;font-weight:700;font-size:16px}
+.msg{margin-top:15px;padding:12px;border-radius:6px}
+.success{background:#eaf8ef;color:#146c35}
+.error{background:#fdecec;color:#a32626}
+</style>
+</head>
+<body>
+
+<div class="notice nyota-brand">
+<span class="nyota-mark">✦</span>
+<span class="nyota-word">NYOTA</span>
+<span class="nyota-tagline">YOUTH • OPPORTUNITY • TRANSFORMATION</span>
+</div>
+
+<header>
+<div class="nav">
+<div class="nav-buttons">
+<a href="index.html" class="btn secondary">Home</a>
+<a href="register.html" class="btn primary">Create Account</a>
+<a href="member-login.html" class="btn secondary">Login</a>
+</div>
+</div>
+</header>
+
+<main class="application-page">
+<div class="container">
+
+<div class="application-header">
+<h1>University Scholarship Application</h1>
+<p>Complete the form below to submit your application through NYOTA.</p>
+</div>
+
+<div class="summary">
+<div><strong>Country:</strong> <span id="country"></span></div>
+<div><strong>University:</strong> <span id="university"></span></div>
+<div><strong>Program:</strong> <span id="program"></span></div>
+</div>
+
+<form class="form" id="applicationForm">
+
+<div class="group">
+<label for="fullName">Full Name *</label>
+<input id="fullName" required>
+</div>
+
+<div class="group">
+<label for="email">Email Address *</label>
+<input id="email" type="email" required>
+</div>
+
+<div class="group">
+<label for="phone">Phone Number *</label>
+<input id="phone" type="tel" required>
+</div>
+
+<div class="group">
+<label for="education">Highest Level of Education *</label>
+<input id="education" placeholder="e.g. KCSE, Diploma, Bachelor's Degree" required>
+</div>
+
+<div class="group">
+<label for="statement">Why do you want to study this program? *</label>
+<textarea id="statement" required></textarea>
+</div>
+
+<button class="submit" type="submit">Submit Application</button>
+
+<div id="message"></div>
+
+</form>
+</div>
+</main>
+
+<footer>
+<div class="container">
+<h3>NYOTA Project</h3>
+<p>A public website for showcasing youth opportunities and resources.</p>
+</div>
+</footer>
+
+<script>
+const p=new URLSearchParams(location.search);
+const country=p.get("country")||"";
+const university=p.get("university")||"";
+const program=p.get("program")||"";
+
+const names={
+uk:"United Kingdom",
+australia:"Australia",
+usa:"United States",
+germany:"Germany",
+"new-zealand":"New Zealand",
+austria:"Austria",
+belgium:"Belgium"
+};
+
+document.getElementById("country").textContent=names[country]||country;
+document.getElementById("university").textContent=university;
+document.getElementById("program").textContent=program;
+
+document.getElementById("applicationForm").addEventListener("submit",async function(e){
+e.preventDefault();
+
+const button=this.querySelector("button");
+const message=document.getElementById("message");
+
+button.disabled=true;
+button.textContent="Submitting...";
+
+const data={
+country:names[country]||country,
+university:university,
+program:program,
+fullName:document.getElementById("fullName").value.trim(),
+email:document.getElementById("email").value.trim(),
+phone:document.getElementById("phone").value.trim(),
+education:document.getElementById("education").value.trim(),
+statement:document.getElementById("statement").value.trim()
+};
+
+try{
+const r=await fetch("/api/university-applications",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify(data)
+});
+
+const result=await r.json();
+
+if(!result.success)throw new Error(result.message||"Application failed.");
+
+message.className="msg success";
+message.textContent="Application submitted successfully. Your application has been received by NYOTA.";
+this.reset();
+button.textContent="Application Submitted";
+
+}catch(error){
+message.className="msg error";
+message.textContent=error.message||"Unable to submit application.";
+button.disabled=false;
+button.textContent="Submit Application";
+}
+});
+</script>
+
+</body>
+</html>

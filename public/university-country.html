@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Universities | NYOTA</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.country-page{padding:40px 20px 60px}
+.country-title{text-align:center;margin-bottom:30px}
+.country-title h1{color:#087f4e}
+.university-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;max-width:1000px;margin:auto}
+.university-card{background:#fff;border:1px solid #dce6e1;border-radius:10px;padding:20px;box-shadow:0 4px 12px #0001}
+.university-card h3{margin:0 0 15px;color:#087f4e}
+.university-card a{display:inline-block}
+</style>
+</head>
+<body>
+
+<div class="notice nyota-brand">
+<span class="nyota-mark">✦</span>
+<span class="nyota-word">NYOTA</span>
+<span class="nyota-tagline">YOUTH • OPPORTUNITY • TRANSFORMATION</span>
+</div>
+
+<header>
+<div class="nav">
+<div class="nav-buttons">
+<a href="index.html" class="btn secondary">Home</a>
+<a href="register.html" class="btn primary">Create Account</a>
+<a href="member-login.html" class="btn secondary">Login</a>
+</div>
+</div>
+</header>
+
+<main class="country-page">
+<div class="country-title">
+<h1 id="countryName">Universities</h1>
+<p>Select one university to view its available programs.</p>
+</div>
+
+<div id="universityGrid" class="university-grid"></div>
+</main>
+
+<footer>
+<div class="container">
+<h3>NYOTA Project</h3>
+<p>A public website for showcasing youth opportunities and resources.</p>
+</div>
+</footer>
+
+<script src="university-data.js"></script>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const country = params.get("country");
+
+const countryNames = {
+uk: "United Kingdom",
+australia: "Australia",
+usa: "United States",
+germany: "Germany",
+"new-zealand": "New Zealand",
+austria: "Austria",
+belgium: "Belgium"
+};
+
+const universities = universityData[country] || [];
+const countryName = countryNames[country] || "Universities";
+
+document.getElementById("countryName").textContent = countryName;
+
+const grid = document.getElementById("universityGrid");
+
+if (!universities.length) {
+grid.innerHTML = "<p>No universities are available for this country.</p>";
+} else {
+universities.forEach(function(university) {
+const card = document.createElement("div");
+card.className = "university-card";
+
+const title = document.createElement("h3");
+title.textContent = university;
+
+const link = document.createElement("a");
+link.className = "btn primary";
+link.textContent = "View Programs";
+link.href =
+"university-programs.html?country=" +
+encodeURIComponent(country) +
+"&university=" +
+encodeURIComponent(university);
+
+card.appendChild(title);
+card.appendChild(link);
+grid.appendChild(card);
+});
+}
+</script>
+
+</body>
+</html>
