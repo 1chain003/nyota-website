@@ -252,27 +252,18 @@ form.addEventListener('submit', async function(e) {
 
         if (result.success) {
             message.className = 'success';
-            if (result.developmentMode && result.verificationLink) {
-                message.innerHTML =
-                    '<strong>Account created successfully!</strong><br><br>' +
-                    '<strong>Local development mode:</strong> Email delivery is not configured yet.<br><br>' +
-                    'Use this link to verify your account:<br><br>' +
-                    '<a href="' + result.verificationLink + '" target="_blank" rel="noopener"><strong>Verify My Email</strong></a><br><br>' +
-                    'The verification link expires after 24 hours.<br><br>' +
-                    '<a href="/member-login.html">Go to Login</a>';
-            } else {
-                message.innerHTML =
-                    '<strong>Account created successfully!</strong><br><br>' +
-                    'We have sent a verification link to your email address.<br>' +
-                    'Please check your inbox and click <strong>Verify My Email</strong> to activate your account.<br><br>' +
-                    'The verification link expires after 24 hours.<br><br>' +
-                    '<a href="/member-login.html">Go to Login</a>';
-            }
+            message.innerHTML =
+                '<strong>Account created successfully!</strong><br><br>' +
+                'Redirecting you to login...';
+
+            setTimeout(function () {
+                window.location.href = '/member-login.html';
+            }, 1500);
 
             form.reset();
 
             button.disabled = true;
-            button.textContent = result.developmentMode ? 'Account Created' : 'Verification Email Sent';
+            button.textContent = 'Account Created';
 
         } else {
             message.className = 'error';

@@ -299,7 +299,7 @@ if (req.method === 'POST' && req.url === '/api/register') {
                 postalCode: postalCode,
                 passwordHash: passwordHash,
                 salt: salt,
-                emailVerified: false,
+                emailVerified: true,
                 verificationToken: verificationToken,
                 verificationTokenCreatedAt: new Date().toISOString(),
                 createdAt: new Date().toISOString()
@@ -308,86 +308,9 @@ if (req.method === 'POST' && req.url === '/api/register') {
             users.push(user);
             saveUsers(users);
 
-            const resendKey = process.env.RESEND_API_KEY;
-
-            if (!resendKey) {
-                console.error('RESEND_API_KEY is not configured.');
-                return sendJson(res, 500, {
-                    success: false,
-                    message: 'Account could not be completed because email verification is not configured.'
-                });
-            }
-
-            const baseUrl = process.env.SITE_URL || 'http://localhost:3000';
-            const verificationLink =
-                baseUrl.replace(/\/$/, '') +
-                '/api/verify-email?token=' +
-                encodeURIComponent(verificationToken);
-
-            if (process.env.DEV_MODE === 'true') {
-                console.log('DEV_MODE: skipping Resend email delivery.');
-                return sendJson(res, 201, { success: true, developmentMode: true, message: 'Account created in local development mode.', verificationLink: verificationLink });
-            }
-
-            try {
-                const emailResponse = await fetch("https://api.resend.com/emails", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": "Bearer " + resendKey
-                    },
-                    body: JSON.stringify({
-                        from: process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev",
-                        to: [email],
-                        subject: "Verify your NYOTA member account",
-                        text:
-                            "Dear " + name + ",\n\n" +
-                            "Thank you for registering. Please verify your email address by opening this link:\n\n" +
-                            verificationLink + "\n\n" +
-                            "If you did not create this account, you can ignore this email.\n\n" +
-                            "NYOTA Member Website",
-                        html:
-                            "<!DOCTYPE html>" +
-                            "<html><body style=\"font-family:Arial,sans-serif;line-height:1.6;color:#222;\">" +
-                            "<h2>Verify your NYOTA member account</h2>" +
-                            "<p>Dear " + name.replace(/</g, '&lt;').replace(/>/g, '&gt;') + ",</p>" +
-                            "<p>Thank you for registering. Please click the button below to verify your email address.</p>" +
-                            "<p><a href=\"" + verificationLink + "\" " +
-                            "style=\"display:inline-block;padding:12px 20px;background:#0b6b3a;color:#fff;text-decoration:none;border-radius:6px;\">" +
-                            "Verify My Email</a></p>" +
-                            "<p>If the button does not work, copy and paste this link into your browser:</p>" +
-                            "<p>" + verificationLink + "</p>" +
-                            "<p>If you did not create this account, you can ignore this email.</p>" +
-                            "</body></html>"
-                    })
-                });
-
-                if (!emailResponse.ok) {
-                    console.error('Resend verification email failed:', await emailResponse.text());
-
-                    const updatedUsers = getUsers().filter(u => u.id !== user.id);
-                    saveUsers(updatedUsers);
-
-                    return sendJson(res, 500, {
-                        success: false,
-                        message: 'We could not send the verification email. Please try registering again.'
-                    });
-                }
-
-            } catch (emailError) {
-                console.error('Verification email error:', emailError.message);
-
-                return sendJson(res, 201, {
-                    success: true,
-                    developmentMode: true,
-                    message: 'Account created. Email could not be sent in local development mode.',
-                    verificationLink: verificationLink
-                });
-            }
-
             return sendJson(res, 201, {
                 success: true,
-                message: 'Account created. Please check your email and click the verification link before logging in.'
+                message: 'Account created successfully. You can now log in.'
             });
 
         } catch (error) {
@@ -527,13 +450,6 @@ if (req.method === 'POST' && req.url === '/api/register') {
                 return sendJson(res, 401, {
                     success: false,
                     message: 'Invalid email or password.'
-                });
-            }
-
-            if (!user.emailVerified) {
-                return sendJson(res, 403, {
-                    success: false,
-                    message: 'Please verify your email address before logging in. Check your email for the verification link.'
                 });
             }
 
