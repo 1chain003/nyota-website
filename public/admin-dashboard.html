@@ -41,6 +41,7 @@ th{background:#eef5f1}
 <div class="tabs">
 <button class="tab active" id="usersTab">Registered Accounts</button>
 <button class="tab" id="applicationsTab">Job Applications</button>
+<button class="tab" id="universityTab">University Applications</button>
 </div>
 <section class="panel" id="usersPanel">
 <h2>Registered Accounts</h2>
@@ -67,6 +68,20 @@ th{background:#eef5f1}
 </table>
 </div>
 </section>
+<section class="panel hidden" id="universityPanel">
+<h2>University Applications</h2>
+<div class="table-wrap">
+<table>
+<thead><tr>
+<th>Name</th><th>Email</th><th>Phone</th><th>Country</th>
+<th>University</th><th>Program</th><th>Education</th>
+<th>Statement</th><th>Submitted</th>
+</tr></thead>
+<tbody id="universityBody"></tbody>
+</table>
+</div>
+</section>
+
 </main>
 <script>
 function esc(v){
@@ -102,9 +117,28 @@ applicationsBody.innerHTML=a.length?a.map(x=>`
 <td>${esc(x.submittedAt)}</td><td>${esc(x.cvFilename)}</td></tr>`).join(''):
 '<tr><td colspan="11">No job applications found.</td></tr>';
 }
+async function loadUniversityApplications(){
+const r=await fetch("/api/admin/university-applications");
+if(!r.ok)throw new Error("Unable to load university applications.");
+const d=await r.json(),a=d.applications||[];
+universityBody.innerHTML=a.length?a.map(x=>`
+<tr><td>${esc(x.name)}</td><td>${esc(x.email)}</td><td>${esc(x.phone)}</td>
+<td>${esc(x.country)}</td><td>${esc(x.university)}</td><td>${esc(x.program)}</td>
+<td>${esc(x.education)}</td><td>${esc(x.message)}</td><td>${esc(x.submittedAt)}</td></tr>`).join(""):
+'<tr><td colspan="9">No university applications found.</td></tr>';
+}
 usersTab.onclick=()=>{
 usersTab.classList.add('active');applicationsTab.classList.remove('active');
 usersPanel.classList.remove('hidden');applicationsPanel.classList.add('hidden');
+};
+universityTab.onclick=()=>{
+universityTab.classList.add("active");
+usersTab.classList.remove("active");
+applicationsTab.classList.remove("active");
+usersPanel.classList.add("hidden");
+applicationsPanel.classList.add("hidden");
+universityPanel.classList.remove("hidden");
+loadUniversityApplications();
 };
 applicationsTab.onclick=()=>{
 applicationsTab.classList.add('active');usersTab.classList.remove('active');
@@ -116,7 +150,7 @@ location.href='/admin-login.html';
 };
 (async()=>{
 if(!await checkAdmin())return;
-try{await Promise.all([loadUsers(),loadApplications()])}
+try{await Promise.all([loadUsers(),loadApplications(),loadUniversityApplications()])}
 catch(e){alert(e.message)}
 })();
 </script>

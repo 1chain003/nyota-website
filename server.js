@@ -258,6 +258,41 @@ const server = http.createServer(async (req, res) => {
         }
     }
 
+    // UNIVERSITY APPLICATIONS
+    if (req.method === 'GET' && req.url === '/api/admin/university-applications') {
+        const adminSession = getAdminSession(req);
+
+        if (!adminSession) {
+            return sendJson(res, 401, {
+                success: false,
+                message: 'Admin authentication required.'
+            });
+        }
+
+        try {
+            const result = await db.query(
+                `SELECT id, country, university, program, name, email, phone,
+                        education, message,
+                        submitted_at AS "submittedAt",
+                        created_at AS "createdAt"
+                 FROM applications
+                 WHERE type = 'university-scholarship'
+                 ORDER BY created_at DESC`
+            );
+
+            return sendJson(res, 200, {
+                success: true,
+                applications: result.rows
+            });
+        } catch (error) {
+            console.error('Admin university applications error:', error.message);
+            return sendJson(res, 500, {
+                success: false,
+                message: 'Unable to load university applications.'
+            });
+        }
+    }
+
     if (req.method === 'GET' && req.url === '/api/admin/me') {
     const adminSession = getAdminSession(req);
     if (!adminSession) {
