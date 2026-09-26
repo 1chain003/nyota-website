@@ -238,7 +238,12 @@ const server = http.createServer(async (req, res) => {
 
         try {
             const result = await db.query(
-                
+                `SELECT id, type, country, university, program, name, email, phone,
+                        NULL AS "idNumber", job_title AS "job", experience, education, message,
+                        submitted_at AS "submittedAt", created_at AS "createdAt",
+                        NULL AS "cvFilename"
+                 FROM applications
+                 ORDER BY created_at DESC`
             );
 
             return sendJson(res, 200, {
