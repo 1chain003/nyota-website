@@ -4,30 +4,68 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { Pool } = require('pg');
+
+const db = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : undefined
+});
+
+db.on('error', (err) => {
+  console.error('Unexpected PostgreSQL pool error:', err.message);
+});
 
 const PORT = Number(process.env.PORT) || 3000;
 const publicPath = path.join(__dirname, 'public');
 const dataPath = path.join(__dirname, 'data');
-const usersFile = path.join(dataPath, 'users.json');
-
-if (!fs.existsSync(dataPath)) {
-    fs.mkdirSync(dataPath, { recursive: true });
+async function getUsersFromDb() {
+    const result = await db.query(
+        `SELECT id, name, email, phone, id_number AS "idNumber",
+                city, postal_code AS "postalCode",
+                password_hash AS "passwordHash", salt,
+                email_verified AS "emailVerified",
+                created_at AS "createdAt"
+         FROM users
+         ORDER BY created_at ASC`
+    );
+    return result.rows;
 }
 
-if (!fs.existsSync(usersFile)) {
-    fs.writeFileSync(usersFile, '[]');
+async function getUserByEmail(email) {
+    const result = await db.query(
+        `SELECT id, name, email, phone, id_number AS "idNumber",
+                city, postal_code AS "postalCode",
+                password_hash AS "passwordHash", salt,
+                email_verified AS "emailVerified",
+                created_at AS "createdAt"
+         FROM users
+         WHERE LOWER(email) = LOWER($1)
+         LIMIT 1`,
+        [email]
+    );
+    return result.rows[0] || null;
 }
 
-function getUsers() {
-    try {
-        return JSON.parse(fs.readFileSync(usersFile, 'utf8'));
-    } catch {
-        return [];
-    }
-}
-
-function saveUsers(users) {
-    fs.writeFileSync(usersFile, JSON.stringify(users, null, 2));
+async function createUserInDb(user) {
+    await db.query(
+        `INSERT INTO users
+         (id, name, email, phone, id_number, city, postal_code,
+          password_hash, salt, email_verified, created_at)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+        [
+            user.id,
+            user.name || '',
+            user.email,
+            user.phone || '',
+            user.idNumber || '',
+            user.city || '',
+            user.postalCode || '',
+            user.passwordHash || '',
+            user.salt || '',
+            user.emailVerified !== false,
+            user.createdAt || new Date().toISOString()
+        ]
+    );
 }
 
 function hashPassword(password, salt) {
@@ -54,7 +92,7 @@ function readBody(req) {
             }
         });
 
-        req.on('end', () => {
+        req.on('end', async () => {
             try {
                 resolve(JSON.parse(body || '{}'));
             } catch {
@@ -82,7 +120,7 @@ const mimeTypes = {
 
 const sessions = new Map();
 
-function getSessionUser(req) {
+async function getSessionUser(req) {
     const cookieHeader = req.headers.cookie || '';
     const match = cookieHeader.match(/(?:^|;\s*)sessionId=([^;]+)/);
 
@@ -92,8 +130,7 @@ function getSessionUser(req) {
 
     if (!session) return null;
 
-    const users = getUsers();
-    return users.find(user => user.email === session.email) || null;
+    return await getUserByEmail(session.email);
 }
 
 
@@ -126,26 +163,24 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'GET' && req.url === '/api/admin/messages') {
         const adminSession = getAdminSession(req);
 
-        if (!sessionUser || sessionUser.email.toLowerCase() !== String(process.env.ADMIN_EMAIL || '').toLowerCase()) {
-            return sendJson(res, 403, {
+        if (!adminSession) {
+            return sendJson(res, 401, {
                 success: false,
-                message: 'Access denied.'
+                message: 'Admin authentication required.'
             });
         }
 
         try {
-            const file = path.join(dataPath, 'messages.json');
-            let messages = [];
-
-            if (fs.existsSync(file)) {
-                messages = JSON.parse(fs.readFileSync(file, 'utf8') || '[]');
-            }
+            const result = await db.query(
+                "SELECT id, name, email, subject, message, created_at AS \"createdAt\" FROM messages ORDER BY created_at DESC"
+            );
 
             return sendJson(res, 200, {
                 success: true,
-                messages: messages.reverse()
+                messages: result.rows
             });
         } catch (error) {
+            console.error('Admin messages error:', error.message);
             return sendJson(res, 500, {
                 success: false,
                 message: 'Could not load messages.'
@@ -165,7 +200,7 @@ const server = http.createServer(async (req, res) => {
         }
 
         try {
-            const users = getUsers();
+            const users = await getUsersFromDb();
 
             const safeUsers = users.map(user => ({
                 id: user.id,
@@ -202,16 +237,13 @@ const server = http.createServer(async (req, res) => {
         }
 
         try {
-            const file = path.join(dataPath, 'applications.json');
-            let applications = [];
-
-            if (fs.existsSync(file)) {
-                applications = JSON.parse(fs.readFileSync(file, 'utf8') || '[]');
-            }
+            const result = await db.query(
+                
+            );
 
             return sendJson(res, 200, {
                 success: true,
-                applications: applications
+                applications: result.rows
             });
         } catch (error) {
             return sendJson(res, 500, {
@@ -275,9 +307,9 @@ if (req.method === 'POST' && req.url === '/api/register') {
                 });
             }
 
-            const users = getUsers();
+            const existingUser = await getUserByEmail(email);
 
-            if (users.some(user => user.email === email)) {
+            if (existingUser) {
                 return sendJson(res, 409, {
                     success: false,
                     message: 'An account with this email already exists.'
@@ -305,8 +337,7 @@ if (req.method === 'POST' && req.url === '/api/register') {
                 createdAt: new Date().toISOString()
             };
 
-            users.push(user);
-            saveUsers(users);
+            await createUserInDb(user);
 
             return sendJson(res, 201, {
                 success: true,
@@ -320,64 +351,6 @@ if (req.method === 'POST' && req.url === '/api/register') {
                 success: false,
                 message: 'Registration failed.'
             });
-        }
-    }
-
-    // EMAIL VERIFICATION
-    if (req.method === 'GET' && req.url.startsWith('/api/verify-email')) {
-        try {
-            const requestUrl = new URL(req.url, 'http://localhost');
-            const token = requestUrl.searchParams.get('token');
-
-            if (!token) {
-                res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' });
-                return res.end('<h2>Invalid verification link.</h2><p>The verification token is missing.</p>');
-            }
-
-            const users = getUsers();
-            const user = users.find(u => u.verificationToken === token);
-
-            if (!user) {
-                res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' });
-                return res.end('<h2>Invalid or expired verification link.</h2><p>Please register again or contact support.</p>');
-            }
-
-            if (user.emailVerified) {
-                res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-                return res.end('<h2>Email already verified.</h2><p>Your account is already verified. You can now log in.</p><p><a href="/member-login.html">Go to Login</a></p>');
-            }
-
-            const tokenCreatedAt = new Date(user.verificationTokenCreatedAt).getTime();
-            const tokenAge = Date.now() - tokenCreatedAt;
-            const tokenLifetime = 24 * 60 * 60 * 1000;
-
-            if (!Number.isFinite(tokenCreatedAt) || tokenAge > tokenLifetime) {
-                res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' });
-                return res.end('<h2>Verification link expired.</h2><p>Please register again or contact support.</p>');
-            }
-
-            user.emailVerified = true;
-            delete user.verificationToken;
-            delete user.verificationTokenCreatedAt;
-
-            saveUsers(users);
-
-            res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-            return res.end(
-                '<!DOCTYPE html>' +
-                '<html><head><meta charset="UTF-8"><title>Email Verified</title></head>' +
-                '<body style="font-family:Arial,sans-serif;text-align:center;padding:60px 20px;">' +
-                '<h2>Email verified successfully!</h2>' +
-                '<p>Your NYOTA member account is now verified.</p>' +
-                '<p><a href="/member-login.html">Continue to Login</a></p>' +
-                '</body></html>'
-            );
-
-        } catch (error) {
-            console.error(error);
-
-            res.writeHead(500, { 'Content-Type': 'text/html; charset=utf-8' });
-            return res.end('<h2>Verification failed.</h2><p>Please try again later.</p>');
         }
     }
 
@@ -434,8 +407,7 @@ if (req.method === 'POST' && req.url === '/api/register') {
             const email = String(body.email || '').trim().toLowerCase();
             const password = String(body.password || '');
 
-            const users = getUsers();
-            const user = users.find(user => user.email === email);
+            const user = await getUserByEmail(email);
 
             if (!user) {
                 return sendJson(res, 401, {
@@ -478,7 +450,7 @@ if (req.method === 'POST' && req.url === '/api/register') {
     }
     // CURRENT MEMBER PROFILE
     if (req.method === 'GET' && req.url === '/api/me') {
-        const sessionUser = getSessionUser(req);
+        const sessionUser = await getSessionUser(req);
 
         if (!sessionUser) {
             return sendJson(res, 401, {
@@ -512,7 +484,7 @@ if (req.method === 'POST' && req.url === '/api/register') {
             }
         });
 
-        req.on('end', () => {
+        req.on('end', async () => {
             try {
                 const data = JSON.parse(body || '{}');
 
@@ -536,47 +508,30 @@ if (req.method === 'POST' && req.url === '/api/register') {
                     });
                 }
 
-                const applicationsFile = path.join(dataPath, 'applications.json');
+                const applicationId = crypto.randomUUID();
+                const submittedAt = new Date().toISOString();
 
-                if (!fs.existsSync(applicationsFile)) {
-                    fs.writeFileSync(applicationsFile, '[]');
-                }
-
-                let applications = [];
-
-                try {
-                    applications = JSON.parse(
-                        fs.readFileSync(applicationsFile, 'utf8') || '[]'
-                    );
-                } catch {
-                    applications = [];
-                }
-
-                const application = {
-                    id: crypto.randomUUID(),
-                    type: 'university-scholarship',
-                    country,
-                    university,
-                    program,
-                    name: fullName,
-                    email,
-                    phone,
-                    education,
-                    message: statement,
-                    submittedAt: new Date().toISOString()
-                };
-
-                applications.push(application);
-
-                fs.writeFileSync(
-                    applicationsFile,
-                    JSON.stringify(applications, null, 2)
+                await db.query(
+                    `INSERT INTO applications (id, type, country, university, program, name, email, phone, education, message, submitted_at, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$11)`,
+                    [
+                        applicationId,
+                        'university-scholarship',
+                        country,
+                        university,
+                        program,
+                        fullName,
+                        email,
+                        phone,
+                        education,
+                        statement,
+                        submittedAt
+                    ]
                 );
 
                 return sendJson(res, 201, {
                     success: true,
                     message: 'University application submitted successfully.',
-                    applicationId: application.id
+                    applicationId: applicationId
                 });
 
             } catch (error) {
@@ -735,46 +690,30 @@ if (req.method === 'POST' && req.url === '/api/register') {
                 });
             }
 
-            const applicationsFile = path.join(dataPath, 'applications.json');
+            const applicationId = crypto.randomUUID();
+            const submittedAt = new Date().toISOString();
 
-            if (!fs.existsSync(applicationsFile)) {
-                fs.writeFileSync(applicationsFile, '[]');
-            }
-
-            const applications = JSON.parse(
-                fs.readFileSync(applicationsFile, 'utf8')
-            );
-
-            const application = {
-                id: crypto.randomUUID(),
-                name,
-                email,
-                phone,
-                idNumber,
-                country,
-                job,
-                experience,
-                education,
-                message,
-                cv: {
-                    originalName: cvFile.originalName,
-                    storedName: cvFile.storedName,
-                    mimeType: cvFile.mimeType
-                },
-                submittedAt: new Date().toISOString()
-            };
-
-            applications.push(application);
-
-            fs.writeFileSync(
-                applicationsFile,
-                JSON.stringify(applications, null, 2)
+            await db.query(
+                    `INSERT INTO applications (id, type, country, university, program, name, email, phone, education, message, submitted_at, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$11)`,
+                [
+                    applicationId,
+                    'job-application',
+                    name,
+                    email,
+                    phone,
+                    country,
+                    job,
+                    experience,
+                    education,
+                    message,
+                    submittedAt
+                ]
             );
 
             return sendJson(res, 201, {
                 success: true,
                 message: 'Application submitted successfully.',
-                applicationId: application.id
+                applicationId: applicationId
             });
 
         } catch (error) {
@@ -805,7 +744,7 @@ if (req.method === 'POST' && req.url === '/api/register') {
     }
 
     if (req.method === "POST" && req.url === "/api/messages") {
-        const sessionUser = getSessionUser(req);
+        const sessionUser = await getSessionUser(req);
 
         if (!sessionUser) {
             return sendJson(res, 401, {
@@ -816,7 +755,7 @@ if (req.method === 'POST' && req.url === '/api/register') {
 
         let body = "";
         req.on("data", chunk => body += chunk);
-        req.on("end", () => {
+        req.on("end", async () => {
             try {
                 const data = JSON.parse(body);
                 if (!data.name || !data.email || !data.subject || !data.message) {
@@ -824,15 +763,18 @@ if (req.method === 'POST' && req.url === '/api/register') {
                     res.end(JSON.stringify({success:false,message:"Please complete all fields."}));
                     return;
                 }
-                const fs = require("fs");
-                const path = require("path");
-                const dir = path.join(__dirname, "data");
-                const file = path.join(dir, "messages.json");
-                if (!fs.existsSync(dir)) fs.mkdirSync(dir, {recursive:true});
-                let messages = [];
-                if (fs.existsSync(file)) messages = JSON.parse(fs.readFileSync(file, "utf8") || "[]");
-                messages.push({id:crypto.randomUUID(),name:data.name,email:data.email,subject:data.subject,message:data.message,createdAt:new Date().toISOString()});
-                fs.writeFileSync(file, JSON.stringify(messages,null,2));
+                await db.query(
+                    `INSERT INTO messages (id, name, email, subject, message, created_at) VALUES ($1,$2,$3,$4,$5,$6)`,
+                    [
+                        crypto.randomUUID(),
+                        data.name,
+                        data.email,
+                        data.subject,
+                        data.message,
+                        new Date().toISOString()
+                    ]
+                );
+
                 res.writeHead(200, {"Content-Type":"application/json"});
                 res.end(JSON.stringify({success:true}));
             } catch (error) {
