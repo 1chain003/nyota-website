@@ -45,14 +45,24 @@
 </div>
 
 <form class="form" id="applicationForm">
-
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-document.getElementById("fullName").value = localStorage.getItem("memberName") || "";
-document.getElementById("email").value = localStorage.getItem("memberEmail") || "";
-document.getElementById("phone").value = localStorage.getItem("memberPhone") || "";
+document.addEventListener("DOMContentLoaded", async function() {
+try {
+const response = await fetch("/api/me");
+const data = await response.json();
+if (response.ok && data.success && data.user) {
+document.getElementById("fullName").value = data.user.name || "";
+document.getElementById("email").value = data.user.email || "";
+document.getElementById("phone").value = data.user.phone || "";
+}
+} catch (error) {
+console.error("Unable to load member details:", error);
+}
 });
 </script>
+
+
+
 
 <div class="group">
 <label for="fullName">Full Name *</label>
