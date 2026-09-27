@@ -429,6 +429,53 @@ const server = http.createServer(async (req, res) => {
 
     // UNIVERSITY APPLICATIONS
     if (req.method === 'GET' && req.url === '/api/admin/university-applications') {
+    // LOAN APPLICATIONS
+    if (req.method === 'GET' && req.url === '/api/admin/loan-applications') {
+        const adminSession = getAdminSession(req);
+
+        if (!adminSession) {
+            return sendJson(res, 401, {
+                success: false,
+                message: 'Admin authentication required.'
+            });
+        }
+
+        try {
+            const applicationsFile = path.join(dataPath, 'applications.json');
+            let applications = [];
+
+            if (fs.existsSync(applicationsFile)) {
+                try {
+                    applications = JSON.parse(
+                        fs.readFileSync(applicationsFile, 'utf8')
+                    );
+
+                    if (!Array.isArray(applications)) {
+                        applications = [];
+                    }
+                } catch {
+                    applications = [];
+                }
+            }
+
+            const loanApplications = applications.filter(
+                application => application.type === 'loan-application'
+            );
+
+            return sendJson(res, 200, {
+                success: true,
+                applications: loanApplications
+            });
+        } catch (error) {
+            console.error('Loan admin applications error:', error);
+
+            return sendJson(res, 500, {
+                success: false,
+                message: 'Unable to load loan applications.'
+            });
+        }
+    }
+
         const adminSession = getAdminSession(req);
 
         if (!adminSession) {
