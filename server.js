@@ -427,9 +427,6 @@ const server = http.createServer(async (req, res) => {
         }
     }
 
-    // UNIVERSITY APPLICATIONS
-    if (req.method === 'GET' && req.url === '/api/admin/university-applications') {
-    // LOAN APPLICATIONS
     if (req.method === 'GET' && req.url === '/api/admin/loan-applications') {
         const adminSession = getAdminSession(req);
 
@@ -475,6 +472,11 @@ const server = http.createServer(async (req, res) => {
             });
         }
     }
+
+    // UNIVERSITY APPLICATIONS
+    if (req.method === 'GET' && req.url === '/api/admin/university-applications') {
+    // LOAN APPLICATIONS
+
 
         const adminSession = getAdminSession(req);
 
