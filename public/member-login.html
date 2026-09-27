@@ -166,6 +166,7 @@
         localStorage.setItem('memberLoggedIn', 'true');
         localStorage.setItem('memberName', data.user.name);
         localStorage.setItem('memberEmail', email);
+        localStorage.setItem('memberPhone', data.user.phone || '');
 
           setTimeout(() => {
             window.location.href = '/';

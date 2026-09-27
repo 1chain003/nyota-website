@@ -46,6 +46,14 @@
 
 <form class="form" id="applicationForm">
 
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+document.getElementById("fullName").value = localStorage.getItem("memberName") || "";
+document.getElementById("email").value = localStorage.getItem("memberEmail") || "";
+document.getElementById("phone").value = localStorage.getItem("memberPhone") || "";
+});
+</script>
+
 <div class="group">
 <label for="fullName">Full Name *</label>
 <input id="fullName" required>
