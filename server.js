@@ -160,6 +160,175 @@ function isLoggedIn(req) {
 const server = http.createServer(async (req, res) => {
 
     // ADMIN MESSAGES INBOX
+    // LOAN APPLICATIONS
+    if (req.method === 'POST' && req.url === '/api/loan-applications') {
+        const sessionUser = await getSessionUser(req);
+
+        if (!sessionUser) {
+            return sendJson(res, 401, {
+                success: false,
+                message: 'Please log in before applying for a loan.'
+            });
+        }
+        try {
+            const contentType = req.headers['content-type'] || '';
+
+            if (!contentType.toLowerCase().startsWith('multipart/form-data')) {
+                return sendJson(res, 400, {
+                    success: false,
+                    message: 'Please submit the application using the required form.'
+                });
+            }
+
+            const busboy = Busboy({
+                headers: req.headers,
+                limits: {
+                    fileSize: 5 * 1024 * 1024,
+                    files: 2
+                }
+            });
+
+            const fields = {};
+            const files = {};
+            let fileError = null;            busboy.on('field', (name, value) => {
+                fields[name] = value;
+            });
+
+            busboy.on('file', (name, file, info) => {
+                const { filename, mimeType } = info;
+
+                if (name !== 'idFront' && name !== 'idBack') {
+                    file.resume();
+                    return;
+                }
+
+                const allowedTypes = [
+                    'image/jpeg',
+                    'image/png',
+                    'image/webp'
+                ];
+
+                const extension = path.extname(filename || '').toLowerCase();
+
+                if (!allowedTypes.includes(mimeType) ||
+                    !['.jpg', '.jpeg', '.png', '.webp'].includes(extension)) {
+                    fileError = 'ID photos must be JPG, JPEG, PNG, or WEBP images.';
+                    file.resume();
+                    return;
+                }
+
+                const loanIdDirectory = path.join(dataPath, 'loan-ids');
+                fs.mkdirSync(loanIdDirectory, { recursive: true });                const safeName = crypto.randomUUID() + extension;
+                const filePath = path.join(loanIdDirectory, safeName);
+
+                const writeStream = fs.createWriteStream(filePath);
+                file.pipe(writeStream);
+
+                files[name] = {
+                    filename: safeName,
+                    originalName: filename,
+                    path: filePath
+                };
+            });
+
+            await new Promise((resolve, reject) => {
+                busboy.on('finish', resolve);
+                busboy.on('error', reject);
+                req.pipe(busboy);
+            });
+
+            if (fileError) {
+                return sendJson(res, 400, {
+                    success: false,
+                    message: fileError
+                });
+            }
+
+            if (!files.idFront || !files.idBack) {
+                return sendJson(res, 400, {
+                    success: false,
+                    message: 'Both front and back ID photos are required.'
+                });
+            }            const loanType = fields.loanType || '';
+            const amount = Number(fields.amount);
+            const purpose = fields.purpose || '';
+
+            if (!['Biashara Loan', 'Ukulima Loan'].includes(loanType)) {
+                return sendJson(res, 400, {
+                    success: false,
+                    message: 'Invalid loan type.'
+                });
+            }
+
+            if (!Number.isInteger(amount) || amount < 24000 || amount > 80000) {
+                return sendJson(res, 400, {
+                    success: false,
+                    message: 'Loan amount must be between KSh 24,000 and KSh 80,000.'
+                });
+            }
+
+            if (!purpose.trim()) {
+                return sendJson(res, 400, {
+                    success: false,
+                    message: 'Please provide the purpose of the loan.'
+                });
+            }
+
+            const applicationId = crypto.randomUUID();
+            const submittedAt = new Date().toISOString();
+
+            const application = {
+                id: applicationId,
+                type: 'loan-application',
+                loanType: loanType,
+                name: sessionUser.name || '',
+                email: sessionUser.email || '',
+                phone: sessionUser.phone || '',
+                idNumber: sessionUser.idNumber || '',
+                amount: amount,
+                purpose: purpose,
+                idFrontFilename: files.idFront.filename,
+                idBackFilename: files.idBack.filename,
+                submittedAt: submittedAt
+            };            const applicationsFile = path.join(dataPath, 'applications.json');
+            let applications = [];
+
+            if (fs.existsSync(applicationsFile)) {
+                try {
+                    applications = JSON.parse(
+                        fs.readFileSync(applicationsFile, 'utf8')
+                    );
+
+                    if (!Array.isArray(applications)) {
+                        applications = [];
+                    }
+                } catch {
+                    applications = [];
+                }
+            }
+
+            applications.push(application);
+
+            fs.writeFileSync(
+                applicationsFile,
+                JSON.stringify(applications, null, 2)
+            );
+
+            return sendJson(res, 201, {
+                success: true,
+                message: 'Loan application submitted successfully.',
+                applicationId: applicationId
+            });
+
+        } catch (error) {
+            console.error('Loan application error:', error);
+
+            return sendJson(res, 500, {
+                success: false,
+                message: 'Loan application submission failed.'
+            });
+        }
+    }
     if (req.method === 'GET' && req.url === '/api/admin/messages') {
         const adminSession = getAdminSession(req);
 
