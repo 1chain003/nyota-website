@@ -27,6 +27,20 @@ button:disabled{background:#999}
 
 <form id="loanForm" enctype="multipart/form-data">
 
+<label for="idNumber">ID Number</label>
+<input type="text" id="idNumber" name="idNumber">
+<button type="button" id="saveIdBtn">Save ID Number</button>
+<p id="idMessage"></p>
+
+<label for="fullName">Full Name</label>
+<input type="text" id="fullName" name="fullName" readonly>
+
+<label for="phone">Phone Number</label>
+<input type="text" id="phone" name="phone" readonly>
+
+<label for="email">Email Address</label>
+<input type="email" id="email" name="email" readonly>
+
 <label for="amount">Loan Amount (KSh)</label>
 <input type="number" id="amount" name="amount" min="24000" max="80000" required>
 
@@ -54,9 +68,56 @@ document.addEventListener("DOMContentLoaded", async function() {
 
         if (!response.ok || !data.success) {
             window.location.href = "/member-login.html";
+            return;
         }
+
+        document.getElementById("idNumber").value = data.user.idNumber || "";
+        document.getElementById("fullName").value = data.user.name || "";
+        document.getElementById("phone").value = data.user.phone || "";
+        document.getElementById("email").value = data.user.email || "";
+
     } catch (error) {
-        console.error("Unable to verify login:", error);
+        console.error("Unable to load account details:", error);
+    }
+})();
+
+document.getElementById("saveIdBtn").addEventListener("click", async function() {
+    const idNumber = document.getElementById("idNumber").value.trim();
+    const message = document.getElementById("idMessage");
+    const button = document.getElementById("saveIdBtn");
+
+    if (!idNumber) {
+        message.textContent = "Please enter your ID number.";
+        return;
+    }
+
+    button.disabled = true;
+    message.textContent = "Saving ID number...";
+
+    try {
+        const response = await fetch("/api/update-id-number", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ idNumber: idNumber })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            message.textContent = "ID number saved successfully.";
+            document.getElementById("idNumber").readOnly = true;
+            button.style.display = "none";
+        } else {
+            message.textContent = result.message || "Unable to save ID number.";
+            button.disabled = false;
+        }
+
+    } catch (error) {
+        console.error("Unable to save ID number:", error);
+        message.textContent = "Unable to save ID number.";
+        button.disabled = false;
     }
 });
 
