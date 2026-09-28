@@ -267,10 +267,10 @@ const server = http.createServer(async (req, res) => {
                 });
             }
 
-            if (!purpose.trim()) {
+            if (purpose.trim().length < 200) {
                 return sendJson(res, 400, {
                     success: false,
-                    message: 'Please provide the purpose of the loan.'
+                    message: 'The purpose of the loan must be at least 200 characters.'
                 });
             }
 
