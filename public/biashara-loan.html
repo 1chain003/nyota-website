@@ -99,8 +99,18 @@ document.addEventListener("DOMContentLoaded", async function() {
             return;
         }
 
-        if (!Number.isInteger(amount) || amount < 24000 || amount > 80000) {
-            message.textContent = "Loan amount must be between KSh 24,000 and KSh 80,000.";
+        if (!Number.isInteger(amount)) {
+            message.textContent = "Please enter a valid loan amount.";
+            return;
+        }
+
+        if (amount < 24000) {
+            message.textContent = "Loan amount cannot be less than KSh 24,000.";
+            return;
+        }
+
+        if (amount > 80000) {
+            message.textContent = "Loan amount cannot exceed KSh 80,000.";
             return;
         }
 

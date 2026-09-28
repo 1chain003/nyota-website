@@ -83,9 +83,21 @@ document.getElementById("loanForm").addEventListener("submit", async function(e)
 
     const amount = Number(document.getElementById("amount").value);
 
-    if (amount < 24000 || amount > 80000) {
+    if (!Number.isInteger(amount)) {
         document.getElementById("message").textContent =
-            "Loan amount must be between KSh 24,000 and KSh 80,000.";
+            "Please enter a valid loan amount.";
+        return;
+    }
+
+    if (amount < 24000) {
+        document.getElementById("message").textContent =
+            "Loan amount cannot be less than KSh 24,000.";
+        return;
+    }
+
+    if (amount > 80000) {
+        document.getElementById("message").textContent =
+            "Loan amount cannot exceed KSh 80,000.";
         return;
     }
 
