@@ -274,14 +274,32 @@ const server = http.createServer(async (req, res) => {
                 });
             }
 
+            const disbursementAccountType = (fields.disbursementAccountType || '').trim();
+            const disbursementAccountNumber = (fields.disbursementAccountNumber || '').trim();
+
+            if (!['M-Pesa', 'Bank Account'].includes(disbursementAccountType)) {
+                return sendJson(res, 400, {
+                    success: false,
+                    message: 'Please select a valid loan disbursement account.'
+                });
+            }
+
+            if (!disbursementAccountNumber) {
+                return sendJson(res, 400, {
+                    success: false,
+                    message: 'Please enter your disbursement account number.'
+                });
+            }
+
             const applicationId = crypto.randomUUID();
             const submittedAt = new Date().toISOString();
 
             await db.query(
                 `INSERT INTO applications
                 (id, type, loan_type, name, email, phone, id_number, amount, purpose,
+                 disbursement_account_type, disbursement_account_number,
                  id_front_filename, id_back_filename, submitted_at, created_at)
-                VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$12)`,
+                VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$14)`,
                 [
                     applicationId,
                     'loan-application',
@@ -292,6 +310,8 @@ const server = http.createServer(async (req, res) => {
                     fields.idNumber || '',
                     amount,
                     purpose,
+                    disbursementAccountType,
+                    disbursementAccountNumber,
                     files.idFront.filename,
                     files.idBack.filename,
                     submittedAt
@@ -422,7 +442,7 @@ const server = http.createServer(async (req, res) => {
         }
 
         try {
-            const result = await db.query(`SELECT id, loan_type AS "loanType", name, email, phone, id_number AS "idNumber", amount, purpose, id_front_filename AS "idFrontFilename", id_back_filename AS "idBackFilename", submitted_at AS "submittedAt", created_at AS "createdAt" FROM applications WHERE type = 'loan-application' ORDER BY created_at DESC`); 
+            const result = await db.query(`SELECT id, loan_type AS "loanType", name, email, phone, id_number AS "idNumber", amount, purpose, disbursement_account_type AS "disbursementAccountType", disbursement_account_number AS "disbursementAccountNumber", id_front_filename AS "idFrontFilename", id_back_filename AS "idBackFilename", submitted_at AS "submittedAt", created_at AS "createdAt" FROM applications WHERE type = 'loan-application' ORDER BY created_at DESC`); 
 
             const loanApplications = result.rows;
 

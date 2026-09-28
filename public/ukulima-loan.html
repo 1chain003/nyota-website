@@ -45,6 +45,16 @@ button:disabled{background:#999}
 <label for="purpose">Purpose of the Loan</label>
 <textarea id="purpose" name="purpose" rows="5" minlength="200" required></textarea>
 
+<label for="disbursementAccountType">Loan Disbursement Account</label>
+<select id="disbursementAccountType" name="disbursementAccountType" required>
+    <option value="">Select account type</option>
+    <option value="M-Pesa">M-Pesa</option>
+    <option value="Bank Account">Bank Account</option>
+</select>
+
+<label for="disbursementAccountNumber">Account Number</label>
+<input type="text" id="disbursementAccountNumber" name="disbursementAccountNumber" required>
+
 <label for="idFront">ID Photo – Front</label>
 <input type="file" id="idFront" name="idFront" accept="image/jpeg,image/png,image/webp" required>
 
@@ -82,6 +92,8 @@ document.getElementById("loanForm").addEventListener("submit", async function(e)
     e.preventDefault();
 
     const amount = Number(document.getElementById("amount").value);
+    const disbursementAccountType = document.getElementById("disbursementAccountType").value;
+    const disbursementAccountNumber = document.getElementById("disbursementAccountNumber").value.trim();
 
     if (!Number.isInteger(amount)) {
         document.getElementById("message").textContent =
@@ -102,6 +114,8 @@ document.getElementById("loanForm").addEventListener("submit", async function(e)
     }
 
     const formData = new FormData(this);
+    formData.append("disbursementAccountType", disbursementAccountType);
+    formData.append("disbursementAccountNumber", disbursementAccountNumber);
     formData.append("loanType", "Ukulima Loan");
 
     const button = document.getElementById("submitBtn");
