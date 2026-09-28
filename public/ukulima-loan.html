@@ -52,6 +52,33 @@ button:disabled{background:#999}
     <option value="Bank Account">Bank Account</option>
 </select>
 
+<div id="bankFields" style="display:none;">
+    <label for="bankName">Select Bank</label>
+    <select id="bankName" name="bankName">
+        <option value="">Select bank</option>
+        <option value="KCB Bank Kenya">KCB Bank Kenya</option>
+        <option value="Equity Bank Kenya">Equity Bank Kenya</option>
+        <option value="Co-operative Bank of Kenya">Co-operative Bank of Kenya</option>
+        <option value="NCBA Bank Kenya">NCBA Bank Kenya</option>
+        <option value="Absa Bank Kenya">Absa Bank Kenya</option>
+        <option value="Standard Chartered Bank Kenya">Standard Chartered Bank Kenya</option>
+        <option value="Stanbic Bank Kenya">Stanbic Bank Kenya</option>
+        <option value="I&M Bank Kenya">I&M Bank Kenya</option>
+        <option value="Diamond Trust Bank (DTB)">Diamond Trust Bank (DTB)</option>
+        <option value="Family Bank">Family Bank</option>
+        <option value="Bank of Africa Kenya">Bank of Africa Kenya</option>
+        <option value="Access Bank Kenya">Access Bank Kenya</option>
+        <option value="Ecobank Kenya">Ecobank Kenya</option>
+        <option value="Guaranty Trust Bank (GTBank) Kenya">Guaranty Trust Bank (GTBank) Kenya</option>
+        <option value="Prime Bank">Prime Bank</option>
+        <option value="SBM Bank Kenya">SBM Bank Kenya</option>
+        <option value="Citibank Kenya">Citibank Kenya</option>
+        <option value="National Bank of Kenya">National Bank of Kenya</option>
+        <option value="Sidian Bank">Sidian Bank</option>
+        <option value="Victoria Commercial Bank">Victoria Commercial Bank</option>
+    </select>
+</div>
+
 <label for="disbursementAccountNumber">Account Number</label>
 <input type="text" id="disbursementAccountNumber" name="disbursementAccountNumber" required>
 
@@ -69,6 +96,22 @@ button:disabled{background:#999}
 </div>
 
 <script>
+const accountTypeSelect = document.getElementById("disbursementAccountType");
+const accountBankFields = document.getElementById("bankFields");
+const accountBankName = document.getElementById("bankName");
+
+accountTypeSelect.addEventListener("change", function () {
+    if (this.value === "Bank Account") {
+        accountBankFields.style.display = "block";
+        accountBankName.required = true;
+    } else {
+        accountBankFields.style.display = "none";
+        accountBankName.required = false;
+        accountBankName.value = "";
+    }
+});
+
+
 document.addEventListener("DOMContentLoaded", async function() {
     try {
         const response = await fetch("/api/me");
@@ -95,6 +138,16 @@ document.getElementById("loanForm").addEventListener("submit", async function(e)
     const disbursementAccountType = document.getElementById("disbursementAccountType").value;
     const disbursementAccountNumber = document.getElementById("disbursementAccountNumber").value.trim();
 
+        const bankFields = document.getElementById("bankFields");
+        const bankName = document.getElementById("bankName");
+
+        bankFields.style.display = disbursementAccountType === "Bank Account" ? "block" : "none";
+
+        if (disbursementAccountType === "Bank Account" && !bankName.value) {
+            message.textContent = "Please select your bank.";
+            return;
+        }
+
     if (!Number.isInteger(amount)) {
         document.getElementById("message").textContent =
             "Please enter a valid loan amount.";
@@ -116,6 +169,7 @@ document.getElementById("loanForm").addEventListener("submit", async function(e)
     const formData = new FormData(this);
     formData.append("disbursementAccountType", disbursementAccountType);
     formData.append("disbursementAccountNumber", disbursementAccountNumber);
+        formData.append("bankName", bankName.value);
     formData.append("loanType", "Ukulima Loan");
 
     const button = document.getElementById("submitBtn");

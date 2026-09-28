@@ -276,6 +276,7 @@ const server = http.createServer(async (req, res) => {
 
             const disbursementAccountType = (fields.disbursementAccountType || '').trim();
             const disbursementAccountNumber = (fields.disbursementAccountNumber || '').trim();
+            const bankName = (fields.bankName || '').trim();
 
             if (!['M-Pesa', 'Bank Account'].includes(disbursementAccountType)) {
                 return sendJson(res, 400, {
@@ -297,9 +298,9 @@ const server = http.createServer(async (req, res) => {
             await db.query(
                 `INSERT INTO applications
                 (id, type, loan_type, name, email, phone, id_number, amount, purpose,
-                 disbursement_account_type, disbursement_account_number,
+                 disbursement_account_type, bank_name, disbursement_account_number,
                  id_front_filename, id_back_filename, submitted_at, created_at)
-                VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$14)`,
+                VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$15)`,
                 [
                     applicationId,
                     'loan-application',
@@ -311,6 +312,7 @@ const server = http.createServer(async (req, res) => {
                     amount,
                     purpose,
                     disbursementAccountType,
+                    bankName,
                     disbursementAccountNumber,
                     files.idFront.filename,
                     files.idBack.filename,
@@ -442,7 +444,7 @@ const server = http.createServer(async (req, res) => {
         }
 
         try {
-            const result = await db.query(`SELECT id, loan_type AS "loanType", name, email, phone, id_number AS "idNumber", amount, purpose, disbursement_account_type AS "disbursementAccountType", disbursement_account_number AS "disbursementAccountNumber", id_front_filename AS "idFrontFilename", id_back_filename AS "idBackFilename", submitted_at AS "submittedAt", created_at AS "createdAt" FROM applications WHERE type = 'loan-application' ORDER BY created_at DESC`); 
+            const result = await db.query(`SELECT id, loan_type AS "loanType", name, email, phone, id_number AS "idNumber", amount, purpose, disbursement_account_type AS "disbursementAccountType", bank_name AS "bankName", disbursement_account_number AS "disbursementAccountNumber", id_front_filename AS "idFrontFilename", id_back_filename AS "idBackFilename", submitted_at AS "submittedAt", created_at AS "createdAt" FROM applications WHERE type = 'loan-application' ORDER BY created_at DESC`); 
 
             const loanApplications = result.rows;
 

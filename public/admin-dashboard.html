@@ -89,7 +89,7 @@ th{background:#eef5f1}
 <table>
 <thead><tr>
 <th>Name</th><th>Email</th><th>Phone</th><th>ID Number</th>
-<th>Loan Type</th><th>Amount</th><th>Purpose</th><th>Submitted</th>
+<th>Loan Type</th><th>Amount</th><th>Purpose</th><th>Account Type</th><th>Bank</th><th>Account Number</th><th>Submitted</th>
 </tr></thead>
 <tbody id="loanBody"></tbody>
 </table>
@@ -147,8 +147,8 @@ const d=await r.json(),a=d.applications||[];
 loanBody.innerHTML=a.length?a.map(x=>`
 <tr><td>${esc(x.name)}</td><td>${esc(x.email)}</td><td>${esc(x.phone)}</td>
 <td>${esc(x.idNumber)}</td><td>${esc(x.loanType)}</td><td>KSh ${esc(x.amount)}</td>
-<td>${esc(x.purpose)}</td><td>${esc(x.submittedAt)}</td></tr>`).join(""):
-'<tr><td colspan="8">No loan applications found.</td></tr>';
+<td>${esc(x.purpose)}</td><td>${esc(x.disbursementAccountType)}</td><td>${esc(x.bankName)}</td><td>${esc(x.disbursementAccountNumber)}</td><td>${esc(x.submittedAt)}</td></tr>`).join(""):
+'<tr><td colspan="11">No loan applications found.</td></tr>';
 }
 
 usersTab.onclick=()=>{
