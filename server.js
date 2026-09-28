@@ -277,41 +277,25 @@ const server = http.createServer(async (req, res) => {
             const applicationId = crypto.randomUUID();
             const submittedAt = new Date().toISOString();
 
-            const application = {
-                id: applicationId,
-                type: 'loan-application',
-                loanType: loanType,
-                name: sessionUser.name || '',
-                email: sessionUser.email || '',
-                phone: sessionUser.phone || '',
-                idNumber: sessionUser.idNumber || '',
-                amount: amount,
-                purpose: purpose,
-                idFrontFilename: files.idFront.filename,
-                idBackFilename: files.idBack.filename,
-                submittedAt: submittedAt
-            };            const applicationsFile = path.join(dataPath, 'applications.json');
-            let applications = [];
-
-            if (fs.existsSync(applicationsFile)) {
-                try {
-                    applications = JSON.parse(
-                        fs.readFileSync(applicationsFile, 'utf8')
-                    );
-
-                    if (!Array.isArray(applications)) {
-                        applications = [];
-                    }
-                } catch {
-                    applications = [];
-                }
-            }
-
-            applications.push(application);
-
-            fs.writeFileSync(
-                applicationsFile,
-                JSON.stringify(applications, null, 2)
+            await db.query(
+                `INSERT INTO applications
+                (id, type, loan_type, name, email, phone, id_number, amount, purpose,
+                 id_front_filename, id_back_filename, submitted_at, created_at)
+                VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$12)`,
+                [
+                    applicationId,
+                    'loan-application',
+                    loanType,
+                    sessionUser.name || '',
+                    sessionUser.email || '',
+                    sessionUser.phone || '',
+                    fields.idNumber || '',
+                    amount,
+                    purpose,
+                    files.idFront.filename,
+                    files.idBack.filename,
+                    submittedAt
+                ]
             );
 
             return sendJson(res, 201, {
@@ -438,26 +422,9 @@ const server = http.createServer(async (req, res) => {
         }
 
         try {
-            const applicationsFile = path.join(dataPath, 'applications.json');
-            let applications = [];
+            const result = await db.query(`SELECT id, loan_type AS "loanType", name, email, phone, id_number AS "idNumber", amount, purpose, id_front_filename AS "idFrontFilename", id_back_filename AS "idBackFilename", submitted_at AS "submittedAt", created_at AS "createdAt" FROM applications WHERE type = 'loan-application' ORDER BY created_at DESC`); 
 
-            if (fs.existsSync(applicationsFile)) {
-                try {
-                    applications = JSON.parse(
-                        fs.readFileSync(applicationsFile, 'utf8')
-                    );
-
-                    if (!Array.isArray(applications)) {
-                        applications = [];
-                    }
-                } catch {
-                    applications = [];
-                }
-            }
-
-            const loanApplications = applications.filter(
-                application => application.type === 'loan-application'
-            );
+            const loanApplications = result.rows;
 
             return sendJson(res, 200, {
                 success: true,
