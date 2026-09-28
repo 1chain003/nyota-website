@@ -730,58 +730,6 @@ if (req.method === 'POST' && req.url === '/api/register') {
         });
     }
 
-    // UPDATE MEMBER ID NUMBER
-    if (req.method === 'POST' && req.url === '/api/update-id-number') {
-        const sessionUser = await getSessionUser(req);
-
-        if (!sessionUser) {
-            return sendJson(res, 401, {
-                success: false,
-                message: 'Please log in first.'
-            });
-        }
-
-        let body = '';
-
-        req.on('data', chunk => {
-            body += chunk.toString();
-        });
-
-        req.on('end', async () => {
-            try {
-                const data = JSON.parse(body);
-                const idNumber = String(data.idNumber || '').trim();
-
-                if (!idNumber) {
-                    return sendJson(res, 400, {
-                        success: false,
-                        message: 'Please provide your ID number.'
-                    });
-                }
-
-                await db.query(
-                    `UPDATE users SET id_number = $1 WHERE id = $2`,
-                    [idNumber, sessionUser.id]
-                );
-
-                return sendJson(res, 200, {
-                    success: true,
-                    message: 'ID number updated successfully.'
-                });
-
-            } catch (error) {
-                console.error(error);
-
-                return sendJson(res, 500, {
-                    success: false,
-                    message: 'Unable to update ID number.'
-                });
-            }
-        });
-
-        return;
-    }
-
     // JOB APPLICATIONS
     if (req.method === 'POST' && req.url === '/api/university-applications') {
         let body = '';
