@@ -60,6 +60,13 @@ button:disabled{background:#999}
 
 <script>
 document.addEventListener("DOMContentLoaded", async function() {
+    const form = document.getElementById("loanForm");
+    const message = document.getElementById("message");
+
+    if (!form) {
+        return;
+    }
+
     try {
         const response = await fetch("/api/me");
         const data = await response.json();
@@ -72,51 +79,77 @@ document.addEventListener("DOMContentLoaded", async function() {
         document.getElementById("fullName").value = data.user.name || "";
         document.getElementById("phone").value = data.user.phone || "";
         document.getElementById("email").value = data.user.email || "";
-
     } catch (error) {
-        console.error("Unable to load account details:", error);
-    }
-})();
-
-document.getElementById("loanForm").addEventListener("submit", async function(e) {
-    e.preventDefault();
-
-    const amount = Number(document.getElementById("amount").value);
-
-    if (amount < 24000 || amount > 80000) {
-        document.getElementById("message").textContent =
-            "Loan amount must be between KSh 24,000 and KSh 80,000.";
-        return;
+        console.error("Account loading error:", error);
     }
 
-    const formData = new FormData(this);
-    formData.append("loanType", "Biashara Loan");
+    form.addEventListener("submit", async function(e) {
+        e.preventDefault();
 
-    const button = document.getElementById("submitBtn");
-    const message = document.getElementById("message");
+        message.textContent = "";
 
-    button.disabled = true;
-    message.textContent = "Submitting application...";
+        const idNumber = document.getElementById("idNumber").value.trim();
+        const amount = Number(document.getElementById("amount").value);
+        const purpose = document.getElementById("purpose").value.trim();
+        const idFront = document.getElementById("idFront").files[0];
+        const idBack = document.getElementById("idBack").files[0];
 
-    try {
-        const response = await fetch("/api/loan-applications", {
-            method: "POST",
-            body: formData
-        });
-
-        const data = await response.json();
-
-        if (response.ok && data.success) {
-            message.textContent = "Loan application submitted successfully.";
-            this.reset();
-        } else {
-            message.textContent = data.message || "Application failed.";
+        if (!idNumber) {
+            message.textContent = "Please enter your ID Number.";
+            return;
         }
-    } catch (error) {
-        message.textContent = "Unable to submit application.";
-    }
 
-    button.disabled = false;
+        if (!Number.isInteger(amount) || amount < 24000 || amount > 80000) {
+            message.textContent = "Loan amount must be between KSh 24,000 and KSh 80,000.";
+            return;
+        }
+
+        if (!purpose) {
+            message.textContent = "Please provide the purpose of the loan.";
+            return;
+        }
+
+        if (!idFront || !idBack) {
+            message.textContent = "Please select both front and back ID photos.";
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("idNumber", idNumber);
+        formData.append("fullName", document.getElementById("fullName").value);
+        formData.append("phone", document.getElementById("phone").value);
+        formData.append("email", document.getElementById("email").value);
+        formData.append("amount", amount);
+        formData.append("purpose", purpose);
+        formData.append("idFront", idFront);
+        formData.append("idBack", idBack);
+        formData.append("loanType", "Biashara Loan");
+
+        const button = document.getElementById("submitBtn");
+        button.disabled = true;
+        message.textContent = "Submitting application...";
+
+        try {
+            const response = await fetch("/api/loan-applications", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                message.textContent = "Loan application submitted successfully.";
+                form.reset();
+            } else {
+                message.textContent = data.message || "Application failed.";
+            }
+        } catch (error) {
+            console.error("Loan submission error:", error);
+            message.textContent = "Unable to submit application. Please try again.";
+        }
+
+        button.disabled = false;
+    });
 });
 </script>
 
