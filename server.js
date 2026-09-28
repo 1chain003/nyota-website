@@ -6,19 +6,9 @@ const path = require('path');
 const crypto = require('crypto');
 const { Pool } = require('pg');
 
-const dbUrl = new URL(process.env.DATABASE_URL || "postgresql://localhost:5432/nyota_database");
-
 const db = new Pool({
-  host: "18.118.220.241",
-  port: 5432,
-  user: decodeURIComponent(dbUrl.username),
-  password: decodeURIComponent(dbUrl.password),
-  database: dbUrl.pathname.slice(1),
-  ssl: {
-    rejectUnauthorized: false,
-    servername: dbUrl.hostname
-  },
-  connectionTimeoutMillis: 10000
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : undefined
 });
 
 db.on('error', (err) => {
