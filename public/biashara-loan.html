@@ -148,7 +148,7 @@ document.addEventListener("DOMContentLoaded", async function() {
             const data = await response.json();
 
             if (response.ok && data.success) {
-                message.textContent = "Loan application submitted successfully.";
+                message.textContent = "Your Biashara Loan application has been received successfully. We are reviewing your application and we will get back to you within the next 3 business days through the email/phone you have registered with.";
                 form.reset();
             } else {
                 message.textContent = data.message || "Application failed.";
