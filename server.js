@@ -1136,7 +1136,7 @@ if (req.method === 'POST' && req.url === '/api/register') {
 
             return sendJson(res, 201, {
                 success: true,
-                message: 'Application submitted successfully.',
+                message: 'Your kazi Majuu application has been received successfully. We are reviewing your application and we will get back to you within the next 3 business days through the email/phone you have registered with.',
                 applicationId: applicationId
             });
 
