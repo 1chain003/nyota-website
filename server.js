@@ -943,7 +943,7 @@ if (req.method === 'POST' && req.url === '/api/register') {
             const name = String(sessionUser.name || '').trim();
             const email = String(sessionUser.email || '').trim().toLowerCase();
             const phone = String(sessionUser.phone || '').trim();
-            const idNumber = String(sessionUser.idNumber || '').trim();
+            const idNumber = String(fields.idNumber || '').trim();
 
             const country = String(fields.country || '').trim();
             const job = String(fields.job || '').trim();
@@ -954,7 +954,7 @@ if (req.method === 'POST' && req.url === '/api/register') {
             if (!name || !email || !phone || !idNumber) {
                 return sendJson(res, 400, {
                     success: false,
-                    message: 'Your member profile is missing required information.'
+                    message: 'Please enter your National ID number before submitting your application.'
                 });
             }
 

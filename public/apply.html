@@ -91,7 +91,7 @@ button{
 <input id="phone" type="tel" required readonly placeholder="Loading your phone number...">
 
 <label>ID Number *</label>
-<input id="idNumber" type="text" inputmode="numeric" required readonly placeholder="Loading your ID number...">
+<input id="idNumber" type="text" inputmode="numeric" required placeholder="Enter your National ID number">
 
 <label>CV *</label>
 <input id="cv" type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required>
@@ -128,11 +128,7 @@ async function loadMemberProfile() {
         document.getElementById("name").value = data.user.name || "";
         document.getElementById("email").value = data.user.email || "";
         document.getElementById("phone").value = data.user.phone || "";
-        document.getElementById("idNumber").value = data.user.idNumber || "";
 
-        if (!data.user.name || !data.user.email || !data.user.phone || !data.user.idNumber) {
-            alert("Your member profile is missing required information. Please update your account details.");
-        }
     } catch (error) {
         console.error("Profile loading error:", error);
         alert("Unable to load your member profile. Please log in again.");
@@ -159,6 +155,7 @@ const formData=new FormData();
 
 formData.append("job",document.getElementById("job").value);
 formData.append("country",document.getElementById("country").value);
+formData.append("idNumber",document.getElementById("idNumber").value.trim());
 formData.append("experience",document.getElementById("experience").value.trim());
 formData.append("education",document.getElementById("education").value.trim());
 formData.append("message",document.getElementById("message").value.trim());
