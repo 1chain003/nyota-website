@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My History - Nyota</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f5f7fa;margin:0;padding:20px;color:#222}
+.container{max-width:800px;margin:30px auto}
+h1{text-align:center;color:#176b3a;margin-bottom:5px}
+.subtitle{text-align:center;color:#666;margin-bottom:25px}
+.card{background:#fff;border-radius:10px;padding:18px;margin-bottom:15px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.card h2{margin:0 0 10px;color:#176b3a;font-size:20px}
+.card p{margin:7px 0;color:#555}
+.status{display:inline-block;padding:6px 10px;border-radius:20px;font-size:13px;font-weight:bold;margin-top:8px}
+.review{background:#fff3cd;color:#856404}
+.processed{background:#d4edda;color:#155724}
+.empty{text-align:center;background:#fff;padding:30px;border-radius:10px;color:#666}
+.back{display:block;text-align:center;margin-top:25px;color:#176b3a;text-decoration:none;font-weight:bold}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>My History</h1>
+<p class="subtitle">Your Nyota program applications</p>
+
+<div id="historyList">Loading your application history...</div>
+
+<a class="back" href="/">← Back to Home</a>
+</div>
+
+
+<script>
+async function loadHistory() {
+    const container = document.getElementById('historyList');
+
+    try {
+        const response = await fetch('/api/history');
+        const data = await response.json();
+
+        if (!data.success) {
+            container.innerHTML = '<div class="empty">' +
+                (data.message || 'Unable to load history.') +
+                '</div>';
+            return;
+        }
+
+        if (!data.history || data.history.length === 0) {
+            container.innerHTML =
+                '<div class="empty">You have not submitted any applications yet.</div>';
+            return;
+        }
+
+        container.innerHTML = data.history.map(item => `
+            <div class="card">
+                <h2>${item.program}</h2>
+                ${item.job ? `<p><strong>Position:</strong> ${item.job}</p>` : ''}
+                ${item.loanType ? `<p><strong>Loan Type:</strong> ${item.loanType}</p>` : ''}
+                ${item.university ? `<p><strong>University:</strong> ${item.university}</p>` : ''}
+                ${item.course ? `<p><strong>Course:</strong> ${item.course}</p>` : ''}
+                <p><strong>Date Applied:</strong> ${new Date(item.createdAt).toLocaleDateString()}</p>
+                <span class="status ${item.status === 'Processed' ? 'processed' : 'review'}">${item.status}</span>
+            </div>
+        `).join('');
+    } catch (err) {
+        console.error(err);
+        container.innerHTML =
+            '<div class="empty">Failed to load application history.</div>';
+    }
+}
+
+loadHistory();
+</script>
+
+</body>
+</html>

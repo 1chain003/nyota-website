@@ -183,7 +183,9 @@ const server = http.createServer(async (req, res) => {
     // ADMIN MESSAGES INBOX
     // LOAN APPLICATIONS
     if (req.method === 'POST' && req.url === '/api/loan-applications') {
-        const sessionUser = await getSessionUser(req);
+        console.log("HISTORY: checking session");
+            const sessionUser = await getSessionUser(req);
+            console.log("HISTORY: session checked", sessionUser ? sessionUser.email : "NO USER");
 
         if (!sessionUser) {
             return sendJson(res, 401, {
@@ -857,6 +859,116 @@ if (req.method === 'POST' && req.url === '/api/register') {
         });
 
         return;
+    }
+
+    if (req.method === 'GET' && req.url === '/api/history') {
+        try {
+            const sessionUser = await getSessionUser(req);
+
+            if (!sessionUser) {
+                return sendJson(res, 401, {
+                    success: false,
+                    message: 'Please log in to view your history.'
+                });
+            }
+
+            const result = await db.query(
+                `SELECT id, type, job, job_title, loan_type, university, program,
+                        submitted_at, created_at
+                 FROM applications
+                 WHERE LOWER(email) = LOWER($1)
+                 ORDER BY COALESCE(submitted_at, created_at) DESC`,
+                [sessionUser.email]
+            );
+
+            const today = new Date();
+
+            function getDateParts(date) {
+                return new Intl.DateTimeFormat('en-CA', {
+                    timeZone: 'Africa/Nairobi',
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                }).formatToParts(new Date(date)).reduce((obj, part) => {
+                    if (part.type !== 'literal') obj[part.type] = part.value;
+                    return obj;
+                }, {});
+            }
+
+            function businessDaysPassed(startDate) {
+                const start = getDateParts(startDate);
+                const end = getDateParts(today);
+
+                let current = new Date(
+                    Number(start.year),
+                    Number(start.month) - 1,
+                    Number(start.day)
+                );
+
+                const finish = new Date(
+                    Number(end.year),
+                    Number(end.month) - 1,
+                    Number(end.day)
+                );
+
+                let days = 0;
+
+                while (current < finish) {
+                    current.setDate(current.getDate() + 1);
+
+                    const day = current.getDay();
+
+                    if (day !== 0 && day !== 6) {
+                        days++;
+                    }
+                }
+
+                return days;
+            }
+
+            const history = result.rows.map(row => {
+                let program = 'Application';
+
+                if (row.type === 'loan-application') {
+                    program = 'Nyota Loan';
+                } else if (row.type === 'university-scholarship') {
+                    program = 'University Scholarship';
+                } else if (
+                    row.type === 'job' ||
+                    row.type === 'job-application'
+                ) {
+                    program = 'Job Application';
+                }
+
+                const submittedAt = row.submitted_at || row.created_at;
+
+                return {
+                    id: row.id,
+                    program: program,
+                    job: row.job || row.job_title || '',
+                    loanType: row.loan_type || '',
+                    university: row.university || '',
+                    course: row.program || '',
+                    createdAt: submittedAt,
+                    status: businessDaysPassed(submittedAt) >= 3
+                        ? 'Processed'
+                        : 'Under Review'
+                };
+            });
+
+            return sendJson(res, 200, {
+                success: true,
+                history: history
+            });
+
+        } catch (error) {
+            console.error('History error:', error);
+
+            return sendJson(res, 500, {
+                success: false,
+                message: 'Unable to load application history.'
+            });
+        }
     }
 
     if (req.method === 'POST' && req.url === '/api/applications') {

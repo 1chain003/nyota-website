@@ -25,6 +25,7 @@
 </div>
       <a href="member-login.html" class="btn secondary" id="loginBtn">Login</a>
       <span id="memberGreeting" style="display:none;font-weight:600;margin-right:10px"></span>
+      <button onclick="window.location.href='history.html'" class="btn secondary" id="historyBtn" style="display:none;margin-bottom:8px">My History</button>
       <button onclick="logoutMember()" class="btn secondary" id="logoutBtn" style="display:none">Logout</button>
     </div>
   </div>
@@ -207,6 +208,7 @@ function updateLoginState() {
   document.getElementById("memberGreeting").textContent = greeting + " " + name;
   document.getElementById("memberGreeting").style.display = loggedIn ? "inline-block" : "none";
   document.getElementById("logoutBtn").style.display = loggedIn ? "inline-block" : "none";
+  document.getElementById("historyBtn").style.display = loggedIn ? "inline-block" : "none";
 }
 
 function logoutMember() {
