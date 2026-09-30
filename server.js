@@ -695,6 +695,50 @@ if (req.method === 'POST' && req.url === '/api/register') {
             });
         }
     }
+    // UPDATE MEMBER PROFILE
+    if (req.method === 'POST' && req.url === '/api/update-profile') {
+        try {
+            const sessionUser = await getSessionUser(req);
+
+            if (!sessionUser) {
+                return sendJson(res, 401, {
+                    success: false,
+                    message: 'Please log in first.'
+                });
+            }
+
+            const fields = await readBody(req);
+            const name = String(fields.name || '').trim();
+            const phone = String(fields.phone || '').trim();
+            const idNumber = String(fields.idNumber || '').trim();
+            const city = String(fields.city || '').trim();
+            const postalCode = String(fields.postalCode || '').trim();
+
+            if (name === "" || phone === "" || idNumber === "" || city === "" || postalCode === "") {
+                return sendJson(res, 400, {
+                    success: false,
+                    message: 'Please complete all required account details.'
+                });
+            }
+
+            await db.query(
+                'UPDATE users SET name = $1, phone = $2, id_number = $3, city = $4, postal_code = $5 WHERE email = $6',
+                [name, phone, idNumber, city, postalCode, sessionUser.email]
+            );
+
+            return sendJson(res, 200, {
+                success: true,
+                message: 'Account details updated successfully.'
+            });
+        } catch (error) {
+            console.error(error);
+            return sendJson(res, 500, {
+                success: false,
+                message: 'Unable to update account details.'
+            });
+        }
+    }
+
     // CURRENT MEMBER PROFILE
     if (req.method === 'GET' && req.url === '/api/me') {
         const sessionUser = await getSessionUser(req);
