@@ -8,7 +8,10 @@ const { Pool } = require('pg');
 
 const db = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : undefined
+  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : undefined,
+  connectionTimeoutMillis: 10000,
+  idleTimeoutMillis: 30000,
+  max: 5
 });
 
 db.on('error', (err) => {
@@ -32,18 +35,36 @@ async function getUsersFromDb() {
 }
 
 async function getUserByEmail(email) {
-    const result = await db.query(
-        `SELECT id, name, email, phone, id_number AS "idNumber",
-                city, postal_code AS "postalCode",
-                password_hash AS "passwordHash", salt,
-                email_verified AS "emailVerified",
-                created_at AS "createdAt"
-         FROM users
-         WHERE LOWER(email) = LOWER($1)
-         LIMIT 1`,
-        [email]
-    );
-    return result.rows[0] || null;
+    let lastError;
+
+    for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+            const result = await db.query(
+                `SELECT id, name, email, phone, id_number AS "idNumber",
+                        city, postal_code AS "postalCode",
+                        password_hash AS "passwordHash", salt,
+                        email_verified AS "emailVerified",
+                        created_at AS "createdAt"
+                 FROM users
+                 WHERE LOWER(email) = LOWER($1)
+                 LIMIT 1`,
+                [email]
+            );
+            return result.rows[0] || null;
+        } catch (error) {
+            lastError = error;
+
+            if (error.code !== 'EAI_AGAIN' && error.code !== 'ECONNRESET' && error.code !== 'ETIMEDOUT') {
+                throw error;
+            }
+
+            if (attempt < 3) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+        }
+    }
+
+    throw lastError;
 }
 
 async function createUserInDb(user) {
@@ -839,7 +860,7 @@ if (req.method === 'POST' && req.url === '/api/register') {
     }
 
     if (req.method === 'POST' && req.url === '/api/applications') {
-        const adminSession = getAdminSession(req);
+        const sessionUser = await getSessionUser(req);
 
         if (!sessionUser) {
             return sendJson(res, 401, {
