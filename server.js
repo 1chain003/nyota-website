@@ -54,7 +54,7 @@ async function getUserByEmail(email) {
         } catch (error) {
             lastError = error;
 
-            if (error.code !== 'EAI_AGAIN' && error.code !== 'ECONNRESET' && error.code !== 'ETIMEDOUT') {
+            if (!['EAI_AGAIN','ECONNRESET','ECONNABORTED','ETIMEDOUT'].includes(error.code)) {
                 throw error;
             }
 
@@ -151,7 +151,16 @@ async function getSessionUser(req) {
 
     if (!session) return null;
 
-    return await getUserByEmail(session.email);
+    try {
+        return await getUserByEmail(session.email);
+    } catch (error) {
+        console.error(
+            'Session lookup failed:',
+            error.code || '',
+            error.message
+        );
+        return null;
+    }
 }
 
 
@@ -441,6 +450,7 @@ const server = http.createServer(async (req, res) => {
                         submitted_at AS "submittedAt", created_at AS "createdAt",
                         NULL AS "cvFilename"
                  FROM applications
+                 WHERE type = 'job-application'
                  ORDER BY created_at DESC`
             );
 
@@ -677,7 +687,22 @@ if (req.method === 'POST' && req.url === '/api/register') {
             const email = String(body.email || '').trim().toLowerCase();
             const password = String(body.password || '');
 
-            const user = await getUserByEmail(email);
+            let user;
+
+            try {
+                user = await getUserByEmail(email);
+            } catch (error) {
+                console.error(
+                    'Login database lookup failed:',
+                    error.code || '',
+                    error.message
+                );
+
+                return sendJson(res, 503, {
+                    success: false,
+                    message: 'Unable to connect to the database. Please try again shortly.'
+                });
+            }
 
             if (!user) {
                 return sendJson(res, 401, {
@@ -1118,15 +1143,15 @@ if (req.method === 'POST' && req.url === '/api/register') {
             const submittedAt = new Date().toISOString();
 
             await db.query(
-                    `INSERT INTO applications (id, type, country, university, program, name, email, phone, education, message, submitted_at, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$11)`,
+                    `INSERT INTO applications (id, type, country, job_title, name, email, phone, experience, education, message, submitted_at, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$11)`,
                 [
                     applicationId,
                     'job-application',
+                    country,
+                    job,
                     name,
                     email,
                     phone,
-                    country,
-                    job,
                     experience,
                     education,
                     message,

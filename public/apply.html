@@ -149,12 +149,24 @@ document.getElementById("applicationForm").addEventListener("submit",async funct
 
 e.preventDefault();
 
+if (this.dataset.submitting === "true") return;
+this.dataset.submitting = "true";
+
+const submitButton = this.querySelector('button[type="submit"]');
+if (submitButton) {
+submitButton.disabled = true;
+submitButton.textContent = "Submitting...";
+}
+
 const result=document.getElementById("result");
 
 const formData=new FormData();
 
 formData.append("job",document.getElementById("job").value);
 formData.append("country",document.getElementById("country").value);
+formData.append("name",document.getElementById("name").value.trim());
+formData.append("email",document.getElementById("email").value.trim());
+formData.append("phone",document.getElementById("phone").value.trim());
 formData.append("idNumber",document.getElementById("idNumber").value.trim());
 formData.append("experience",document.getElementById("experience").value.trim());
 formData.append("education",document.getElementById("education").value.trim());
@@ -164,6 +176,11 @@ const cv=document.getElementById("cv").files[0];
 
 if(!cv){
 result.textContent="Please upload your CV.";
+this.dataset.submitting = "false";
+if (submitButton) {
+submitButton.disabled = false;
+submitButton.textContent = "Submit Application";
+}
 return;
 }
 
@@ -191,11 +208,25 @@ result.innerHTML=
 
 result.textContent=data.message||"Application failed.";
 
+this.dataset.submitting = "false";
+
+if (submitButton) {
+submitButton.disabled = false;
+submitButton.textContent = "Submit Application";
+}
+
 }
 
 }catch(error){
 
 result.textContent="Unable to submit application. Please try again.";
+
+this.dataset.submitting = "false";
+
+if (submitButton) {
+submitButton.disabled = false;
+submitButton.textContent = "Submit Application";
+}
 
 }
 
