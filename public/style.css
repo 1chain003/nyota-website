@@ -222,28 +222,3 @@ th:nth-child(6),
 td:nth-child(6) {
   min-width: 280px;
 }
-
-/* Testimonials: keep the heading fixed and move only the beneficiary table */
-.testimonials-slider {
-  overflow: hidden;
-  width: 100%;
-}
-
-.testimonials-track {
-  width: max-content;
-  animation: testimonialsMove 45s ease-in-out infinite alternate;
-}
-
-.testimonials-track table {
-  margin: 0;
-}
-
-@keyframes testimonialsMove {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(calc(-100vw + 100%));
-  }
-}
-
